@@ -24,12 +24,22 @@ ot_ok = df_filtered['OT OK'].sum()
 ot_nok = df_filtered['OT NOK'].sum()
 ot_report = df_filtered['OT Reportes'].sum()
 
+# === CALCULS MOYENNES DES TAUX ===
+taux_cols = ['Taux Réussite', 'Taux Echec', 'Taux Report', 'Taux Cloture']
+for col in taux_cols:
+    df_filtered[col] = pd.to_numeric(df_filtered[col], errors='coerce')
+
+moy_taux_reussite = df_filtered['Taux Réussite'].mean()
+moy_taux_echec = df_filtered['Taux Echec'].mean()
+moy_taux_report = df_filtered['Taux Report'].mean()
+moy_taux_cloture = df_filtered['Taux Cloture'].mean()
+
 # === INDICATEURS ===
 kpi1, kpi2, kpi3, kpi4 = st.columns(4)
 kpi1.metric("Nombre d'interventions", total_interv)
 kpi2.metric("OT Réalisés", int(ot_real))
-kpi3.metric("OT OK / NOK", f"{int(ot_ok)} / {int(ot_nok)}")
-kpi4.metric("OT Reportés", int(ot_report))
+kpi3.metric("OT OK / NOK", f"{int(not_ok)} / {int(not_nok)}")
+kpi4.metric("OT Reportés", int(not_report))
 
 # === GRAPHIQUE : Montant par jour ===
 if 'Date' in df_filtered.columns and 'OT Réalisé' in df_filtered.columns:
@@ -84,18 +94,10 @@ AgGrid(
 )
 
 # === TAUX DE RÉUSSITE ET ÉCHEC ===
-st.subheader("\U0001F4C9 Taux de Réussite et d'Échec")
+st.subheader("\U0001F4C9 Moyennes des taux")
 
-if total_interv > 0 and ot_real > 0:
-    taux_reussite = (ot_ok / ot_real) * 100
-    taux_echec = (ot_nok / ot_real) * 100
-    taux_report = (ot_report / total_interv) * 100
-    taux_cloture = (ot_real / total_interv) * 100
-
-    col1, col2, col3, col4 = st.columns(4)
-    col1.metric("% Réussite (OK)", f"{taux_reussite:.2f}%")
-    col2.metric("% Échec (NOK)", f"{taux_echec:.2f}%")
-    col3.metric("% Reportés", f"{taux_report:.2f}%")
-    col4.metric("% Clôturés", f"{taux_cloture:.2f}%")
-else:
-    st.warning("Aucune intervention réalisée pour ce technicien.")
+col1, col2, col3, col4 = st.columns(4)
+col1.metric("% Réussite (OK)", f"{moy_taux_reussite:.2f}%")
+col2.metric("% Échec (NOK)", f"{moy_taux_echec:.2f}%")
+col3.metric("% Reportés", f"{moy_taux_report:.2f}%")
+col4.metric("% Clôturés", f"{moy_taux_cloture:.2f}%")
