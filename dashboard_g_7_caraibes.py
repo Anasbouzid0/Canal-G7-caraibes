@@ -47,7 +47,7 @@ ch1.altair_chart(chart1, use_container_width=True)
 ch2.altair_chart(chart2, use_container_width=True)
 
 # === TABLEAU HORIZONTAL : Types de facturation ===
-st.subheader("\U0001F4CA Répartition des types de facturation")
+st.subheader(" Répartition des types de facturation")
 fact_counts = df_filtered["FACTURATION"].value_counts().sort_index()
 fact_row = pd.DataFrame(fact_counts).T
 fact_row.index = ["Nombre"]
@@ -66,7 +66,7 @@ AgGrid(
 )
 
 # === TABLEAU PRINCIPAL ===
-st.subheader("\U0001F4C8 Détails des interventions")
+st.subheader("Détails des interventions")
 gb = GridOptionsBuilder.from_dataframe(df_filtered)
 gb.configure_default_column(filter=True, sortable=True)
 gb.configure_pagination()
