@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import altair as alt
-from st_aggrid import AgGrid, GridOptionsBuilder
+from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode
 
 st.set_page_config(page_title="Suivi détaillé par technicien", layout="wide")
 
@@ -19,18 +19,17 @@ df_filtered = df[df["NOM"] == technicien_choisi]
 
 # === CALCULS ===
 total_interv = len(df_filtered)
-etat_counts = df_filtered['État'].value_counts()
 ot_real = df_filtered['OT Réalisé'].sum()
-ot_report = df_filtered['OT Reportes'].sum()
 ot_ok = df_filtered['OT OK'].sum()
 ot_nok = df_filtered['OT NOK'].sum()
+ot_report = df_filtered['OT Reportes'].sum()
 
 # === INDICATEURS ===
 kpi1, kpi2, kpi3, kpi4 = st.columns(4)
 kpi1.metric("Nombre d'interventions", total_interv)
 kpi2.metric("OT Réalisés", int(ot_real))
-kpi3.metric("OT OK / NOK", f"{int(ot_ok)} / {int(ot_nok)}")
-kpi4.metric("Types d'État rencontrés", len(etat_counts))
+kpi3.metric("OT OK / NOK", f"{int(not_ok)} / {int(not_nok)}")
+kpi4.metric("OT Reportés", int(not_report))
 
 # === GRAPHIQUE : Montant par jour ===
 if 'Date' in df_filtered.columns and 'OT Réalisé' in df_filtered.columns:
@@ -52,22 +51,31 @@ st.subheader("\U0001F4CA Détails des interventions pour " + technicien_choisi)
 colonnes_affichees = ["Date", "NOM", "État", "OT planifiés", "OT Réalisé", "OT OK", "OT NOK", "OT Reportes"]
 df_affiche = df_filtered[colonnes_affichees]
 
-# AgGrid
+# AgGrid personnalisé avec thème streamlit-dark
 gb = GridOptionsBuilder.from_dataframe(df_affiche)
 gb.configure_default_column(filter=True, resizable=True)
-gb.configure_pagination()
+gb.configure_pagination(paginationAutoPageSize=True)
+gb.configure_grid_options(domLayout='normal')
 options = gb.build()
 
-AgGrid(df_affiche, gridOptions=options, theme="alpine", fit_columns_on_grid_load=True)
+st.markdown("<style>.ag-theme-streamlit-dark .ag-header-cell-label { color: white; }</style>", unsafe_allow_html=True)
+AgGrid(
+    df_affiche,
+    gridOptions=options,
+    theme="streamlit-dark",
+    fit_columns_on_grid_load=True,
+    update_mode=GridUpdateMode.NO_UPDATE,
+    height=400
+)
 
 # === TAUX DE RÉUSSITE ET ÉCHEC ===
 st.subheader("\U0001F4C9 Taux de Réussite et d'Échec")
 
-if total_interv > 0:
-    taux_reussite = df_filtered['Taux Réussite'].mean()
-    taux_echec = df_filtered['Taux Echec'].mean()
-    taux_report = df_filtered['Taux Report'].mean()
-    taux_cloture = df_filtered['Taux Cloture'].mean()
+if total_interv > 0 and ot_real > 0:
+    taux_reussite = (not_ok / ot_real) * 100
+    taux_echec = (not_nok / ot_real) * 100
+    taux_report = (not_report / total_interv) * 100
+    taux_cloture = (ot_real / total_interv) * 100
 
     col1, col2, col3, col4 = st.columns(4)
     col1.metric("% Réussite (OK)", f"{taux_reussite:.2f}%")
@@ -75,4 +83,4 @@ if total_interv > 0:
     col3.metric("% Reportés", f"{taux_report:.2f}%")
     col4.metric("% Clôturés", f"{taux_cloture:.2f}%")
 else:
-    st.warning("Aucune intervention enregistrée pour ce technicien.")
+    st.warning("Aucune intervention réalisée pour ce technicien.")
