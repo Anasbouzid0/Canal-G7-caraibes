@@ -6,7 +6,8 @@ from st_aggrid import AgGrid, GridOptionsBuilder
 st.set_page_config(page_title="Suivi détaillé par technicien", layout="wide")
 
 # === CHARGEMENT DES DONNÉES ===
-df = pd.read_excel("/content/drive/MyDrive/New Project/Canal inter.xlsx", sheet_name="SUIVI JOURNALIER CANAL")
+df = pd.read_excel("Canal inter.xlsx", sheet_name="SUIVI JOURNALIER CANAL")
+
 
 # Renommer les colonnes si nécessaire
 if 'Nom technicien' in df.columns:
