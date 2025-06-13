@@ -7,12 +7,6 @@ from PIL import Image
 
 st.set_page_config(page_title="Dashboard G7 Caraïbes", layout="wide")
 
-# === HEADER AVEC LOGO ===
-logo = Image.open("/content/drive/MyDrive/New Project/logo_g7.jpeg")
-col_logo, col_title = st.columns([1, 5])
-col_logo.image(logo, use_column_width=True)
-col_title.markdown("# Tableau de bord G7 Caraïbes")
-
 # === CHARGEMENT DES DONNÉES ===
 df = pd.read_excel("/content/drive/MyDrive/New Project/Canal Mai.xlsx")
 
