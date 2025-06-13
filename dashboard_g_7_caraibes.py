@@ -8,7 +8,7 @@ from PIL import Image
 st.set_page_config(page_title="Dashboard G7 Caraïbes", layout="wide")
 
 # === CHARGEMENT DES DONNÉES ===
-df = pd.read_excel("/content/drive/MyDrive/New Project/Canal Mai.xlsx")
+df = pd.read_excel("Canal Mai.xlsx")
 
 # === FILTRES ===
 st.sidebar.header("Filtres")
