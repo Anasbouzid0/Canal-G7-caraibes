@@ -58,7 +58,22 @@ gb.configure_pagination(paginationAutoPageSize=True)
 gb.configure_grid_options(domLayout='normal')
 options = gb.build()
 
-st.markdown("<style>.ag-theme-streamlit-dark .ag-header-cell-label { color: white; }</style>", unsafe_allow_html=True)
+st.markdown("""
+    <style>
+    .ag-theme-streamlit-dark {
+        background-color: #2e2e2e !important;
+        color: white !important;
+    }
+    .ag-theme-streamlit-dark .ag-header-cell-label {
+        color: white !important;
+    }
+    .ag-theme-streamlit-dark .ag-row, .ag-theme-streamlit-dark .ag-cell {
+        background-color: #1e1e1e !important;
+        color: #f0f0f0 !important;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
 AgGrid(
     df_affiche,
     gridOptions=options,
