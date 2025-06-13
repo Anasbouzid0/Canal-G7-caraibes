@@ -95,7 +95,7 @@ AgGrid(
 )
 
 # === TAUX DE RÉUSSITE ET ÉCHEC ===
-st.subheader("\U0001F4C9 Moyennes des taux")
+st.subheader(" Moyennes des taux")
 
 col1, col2, col3, col4 = st.columns(4)
 col1.metric("% Réussite (OK)", f"{moy_taux_reussite:.2f}%")
