@@ -1,0 +1,7 @@
+streamlit
+pandas
+openpyxl
+altair
+xlsxwriter
+st-aggrid
+pillow
