@@ -38,19 +38,20 @@ moy_taux_cloture = df_filtered['Taux Cloture'].mean()
 kpi1, kpi2, kpi3, kpi4 = st.columns(4)
 kpi1.metric("OT Planifiés", int(total_planifies))
 kpi2.metric("OT Réalisés", int(ot_real))
-kpi3.metric("OT OK / NOK", f"{int(ot_ok)} / {int(ot_nok)}")
-kpi4.metric("OT Reportés", int(ot_report))
+kpi3.metric("OT OK / NOK", f"{int(not_ok)} / {int(not_nok)}")
+kpi4.metric("OT Reportés", int(not_report))
 
-# === GRAPHIQUE : Montant par jour ===
+# === GRAPHIQUE : OT Réalisés par jour avec jour du mois ===
 if 'Date' in df_filtered.columns and 'OT Réalisé' in df_filtered.columns:
     df_filtered['Date'] = pd.to_datetime(df_filtered['Date'], errors='coerce')
     montant_par_jour = df_filtered.groupby('Date')['OT Réalisé'].sum().reset_index()
+    montant_par_jour['Jour'] = montant_par_jour['Date'].dt.strftime('%d')  # extraire jour (02, 03, ..., 31)
 
     st.subheader("\U0001F4C8 OT Réalisés par jour")
     chart = alt.Chart(montant_par_jour).mark_line(point=True).encode(
-        x=alt.X('Date:T', title='Date'),
+        x=alt.X('Jour:O', title='Jour du mois', sort=montant_par_jour['Jour'].tolist()),
         y=alt.Y('OT Réalisé:Q', title='OT Réalisé'),
-        tooltip=['Date:T', 'OT Réalisé:Q']
+        tooltip=['Jour', 'OT Réalisé']
     ).properties(width=800, height=400)
 
     st.altair_chart(chart, use_container_width=True)
