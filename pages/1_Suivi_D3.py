@@ -28,8 +28,8 @@ ot_report = df_filtered['OT Reportes'].sum()
 kpi1, kpi2, kpi3, kpi4 = st.columns(4)
 kpi1.metric("Nombre d'interventions", total_interv)
 kpi2.metric("OT Réalisés", int(ot_real))
-kpi3.metric("OT OK / NOK", f"{int(not_ok)} / {int(not_nok)}")
-kpi4.metric("OT Reportés", int(not_report))
+kpi3.metric("OT OK / NOK", f"{int(ot_ok)} / {int(ot_nok)}")
+kpi4.metric("OT Reportés", int(ot_report))
 
 # === GRAPHIQUE : Montant par jour ===
 if 'Date' in df_filtered.columns and 'OT Réalisé' in df_filtered.columns:
@@ -72,9 +72,9 @@ AgGrid(
 st.subheader("\U0001F4C9 Taux de Réussite et d'Échec")
 
 if total_interv > 0 and ot_real > 0:
-    taux_reussite = (not_ok / ot_real) * 100
-    taux_echec = (not_nok / ot_real) * 100
-    taux_report = (not_report / total_interv) * 100
+    taux_reussite = (ot_ok / ot_real) * 100
+    taux_echec = (ot_nok / ot_real) * 100
+    taux_report = (ot_report / total_interv) * 100
     taux_cloture = (ot_real / total_interv) * 100
 
     col1, col2, col3, col4 = st.columns(4)
