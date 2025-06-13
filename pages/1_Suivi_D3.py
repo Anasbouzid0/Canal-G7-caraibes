@@ -18,7 +18,7 @@ technicien_choisi = st.selectbox("Choisir un technicien", sorted(techniciens))
 df_filtered = df[df["NOM"] == technicien_choisi]
 
 # === CALCULS ===
-total_interv = len(df_filtered)
+total_planifies = df_filtered['OT planifiés'].sum()
 ot_real = df_filtered['OT Réalisé'].sum()
 ot_ok = df_filtered['OT OK'].sum()
 ot_nok = df_filtered['OT NOK'].sum()
@@ -36,10 +36,10 @@ moy_taux_cloture = df_filtered['Taux Cloture'].mean()
 
 # === INDICATEURS ===
 kpi1, kpi2, kpi3, kpi4 = st.columns(4)
-kpi1.metric("Nombre d'interventions", total_interv)
+kpi1.metric("OT Planifiés", int(total_planifies))
 kpi2.metric("OT Réalisés", int(ot_real))
-kpi3.metric("OT OK / NOK", f"{int(ot_ok)} / {int(ot_nok)}")
-kpi4.metric("OT Reportés", int(ot_report))
+kpi3.metric("OT OK / NOK", f"{int(not_ok)} / {int(not_nok)}")
+kpi4.metric("OT Reportés", int(not_report))
 
 # === GRAPHIQUE : Montant par jour ===
 if 'Date' in df_filtered.columns and 'OT Réalisé' in df_filtered.columns:
