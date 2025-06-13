@@ -7,55 +7,33 @@ st.set_page_config(page_title="Suivi détaillé par technicien", layout="wide")
 
 # === CHARGEMENT DES DONNÉES ===
 df = pd.read_excel("Canal inter.xlsx", sheet_name="SUIVI JOURNALIER CANAL")
+df_stt = pd.read_excel("Canal Mai.xlsx")  # contient les montants STT par technicien
 
 # Renommer les colonnes si nécessaire
 if 'Nom technicien' in df.columns:
     df.rename(columns={"Nom technicien": "NOM"}, inplace=True)
 
-# === FILTRE TECHNICIEN ===
-techniciens = df["NOM"].dropna().unique().tolist()
-technicien_choisi = st.selectbox("Choisir un technicien", sorted(techniciens))
-df_filtered = df[df["NOM"] == technicien_choisi]
+# === TABLEAU GLOBAL PAR TECHNICIEN ===
+st.subheader("\U0001F4CA Synthèse globale par technicien")
+df_grouped = df.groupby("NOM").agg({
+    "OT Réalisé": "sum",
+    "OT OK": "sum",
+    "OT NOK": "sum",
+    "Taux Réussite": "mean",
+    "Taux Echec": "mean",
+    "Taux Cloture": "mean",
+    "Taux Report": "mean"
+}).reset_index()
 
-# === CALCULS ===
-total_interv = len(df_filtered)
-ot_real = df_filtered['OT Réalisé'].sum()
-ot_ok = df_filtered['OT OK'].sum()
-ot_nok = df_filtered['OT NOK'].sum()
-ot_report = df_filtered['OT Reportes'].sum()
+# Ajouter les montants STT depuis le deuxième fichier
+if 'NOM' in df_stt.columns and 'STT' in df_stt.columns:
+    montant_stt = df_stt.groupby("NOM")["STT"].sum().reset_index()
+    df_grouped = pd.merge(df_grouped, montant_stt, on="NOM", how="left")
 
-# === INDICATEURS ===
-kpi1, kpi2, kpi3, kpi4 = st.columns(4)
-kpi1.metric("Nombre d'interventions", total_interv)
-kpi2.metric("OT Réalisés", int(ot_real))
-kpi3.metric("OT OK / NOK", f"{int(ot_ok)} / {int(ot_nok)}")
-kpi4.metric("OT Reportés", int(ot_report))
-
-# === GRAPHIQUE : Montant par jour ===
-if 'Date' in df_filtered.columns and 'OT Réalisé' in df_filtered.columns:
-    df_filtered['Date'] = pd.to_datetime(df_filtered['Date'], errors='coerce')
-    montant_par_jour = df_filtered.groupby('Date')['OT Réalisé'].sum().reset_index()
-
-    st.subheader("\U0001F4C8 OT Réalisés par jour")
-    chart = alt.Chart(montant_par_jour).mark_line(point=True).encode(
-        x=alt.X('Date:T', title='Date'),
-        y=alt.Y('OT Réalisé:Q', title='OT Réalisé'),
-        tooltip=['Date:T', 'OT Réalisé:Q']
-    ).properties(width=800, height=400)
-
-    st.altair_chart(chart, use_container_width=True)
-
-# === TABLEAU DÉTAILLÉ ===
-st.subheader("\U0001F4CA Détails des interventions pour " + technicien_choisi)
-
-colonnes_affichees = ["Date", "NOM", "État", "OT planifiés", "OT Réalisé", "OT OK", "OT NOK", "OT Reportes"]
-df_affiche = df_filtered[colonnes_affichees]
-
-# AgGrid personnalisé avec thème streamlit-dark
-gb = GridOptionsBuilder.from_dataframe(df_affiche)
+# Affichage du tableau sombre
+gb = GridOptionsBuilder.from_dataframe(df_grouped)
 gb.configure_default_column(filter=True, resizable=True)
 gb.configure_pagination(paginationAutoPageSize=True)
-gb.configure_grid_options(domLayout='normal')
 options = gb.build()
 
 st.markdown("""
@@ -75,7 +53,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 AgGrid(
-    df_affiche,
+    df_grouped,
     gridOptions=options,
     theme="streamlit-dark",
     fit_columns_on_grid_load=True,
@@ -83,19 +61,30 @@ AgGrid(
     height=400
 )
 
-# === TAUX DE RÉUSSITE ET ÉCHEC ===
-st.subheader("\U0001F4C9 Taux de Réussite et d'Échec")
+# === GRAPHIQUE 1 : Montant STT par technicien ===
+st.subheader("\U0001F4B8 Montant STT par technicien")
+chart1 = alt.Chart(df_grouped).mark_bar().encode(
+    x=alt.X('NOM:N', sort='-y', title='Technicien'),
+    y=alt.Y('STT:Q', title='Montant STT (€)'),
+    tooltip=['NOM', 'STT']
+).properties(width=800, height=400)
 
-if total_interv > 0 and ot_real > 0:
-    taux_reussite = (ot_ok / ot_real) * 100
-    taux_echec = (ot_nok / ot_real) * 100
-    taux_report = (ot_report / total_interv) * 100
-    taux_cloture = (ot_real / total_interv) * 100
+st.altair_chart(chart1, use_container_width=True)
 
-    col1, col2, col3, col4 = st.columns(4)
-    col1.metric("% Réussite (OK)", f"{taux_reussite:.2f}%")
-    col2.metric("% Échec (NOK)", f"{taux_echec:.2f}%")
-    col3.metric("% Reportés", f"{taux_report:.2f}%")
-    col4.metric("% Clôturés", f"{taux_cloture:.2f}%")
+# === GRAPHIQUE 2 : Montant par jour (selon technicien) ===
+st.subheader("\U0001F4C8 Variation des montants STT par jour et par technicien")
+
+if 'Date' in df_stt.columns:
+    df_stt['Date'] = pd.to_datetime(df_stt['Date'], errors='coerce')
+    montant_jour_technicien = df_stt.groupby(["Date", "NOM"])["STT"].sum().reset_index()
+
+    chart2 = alt.Chart(montant_jour_technicien).mark_line().encode(
+        x=alt.X('Date:T', title='Date'),
+        y=alt.Y('STT:Q', title='Montant STT (€)'),
+        color='NOM:N',
+        tooltip=['Date:T', 'NOM', 'STT']
+    ).properties(width=800, height=400)
+
+    st.altair_chart(chart2, use_container_width=True)
 else:
-    st.warning("Aucune intervention réalisée pour ce technicien.")
+    st.warning("Colonne 'Date' manquante dans le fichier Canal Mai.xlsx")
