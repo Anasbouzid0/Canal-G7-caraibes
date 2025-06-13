@@ -47,7 +47,7 @@ if 'Date' in df_filtered.columns and 'OT Réalisé' in df_filtered.columns:
     montant_par_jour = df_filtered.groupby('Date')['OT Réalisé'].sum().reset_index()
     montant_par_jour['Jour'] = montant_par_jour['Date'].dt.strftime('%d')  # extraire jour (02, 03, ..., 31)
 
-    st.subheader("\U0001F4C8 OT Réalisés par jour")
+    st.subheader("OT Réalisés par jour")
     chart = alt.Chart(montant_par_jour).mark_line(point=True).encode(
         x=alt.X('Jour:O', title='Mai', sort=montant_par_jour['Jour'].tolist()),
         y=alt.Y('OT Réalisé:Q', title='OT Réalisé'),
@@ -57,7 +57,7 @@ if 'Date' in df_filtered.columns and 'OT Réalisé' in df_filtered.columns:
     st.altair_chart(chart, use_container_width=True)
 
 # === TABLEAU DÉTAILLÉ ===
-st.subheader("\U0001F4CA Détails des interventions pour " + technicien_choisi)
+st.subheader(" Détails des interventions pour " + technicien_choisi)
 
 colonnes_affichees = ["Date", "NOM", "État", "OT planifiés", "OT Réalisé", "OT OK", "OT NOK", "OT Reportes"]
 df_affiche = df_filtered[colonnes_affichees]
