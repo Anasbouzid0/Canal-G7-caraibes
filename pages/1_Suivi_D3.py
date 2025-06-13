@@ -49,7 +49,7 @@ if 'Date' in df_filtered.columns and 'OT Réalisé' in df_filtered.columns:
 
     st.subheader("\U0001F4C8 OT Réalisés par jour")
     chart = alt.Chart(montant_par_jour).mark_line(point=True).encode(
-        x=alt.X('Jour:O', title='Jour du mois', sort=montant_par_jour['Jour'].tolist()),
+        x=alt.X('Jour:O', title='Mai', sort=montant_par_jour['Jour'].tolist()),
         y=alt.Y('OT Réalisé:Q', title='OT Réalisé'),
         tooltip=['Jour', 'OT Réalisé']
     ).properties(width=800, height=400)
