@@ -1,73 +1,81 @@
 import streamlit as st
 import pandas as pd
 import altair as alt
+from st_aggrid import AgGrid, GridOptionsBuilder
 
-st.set_page_config(page_title="Suivi D3 - G7 Caraïbes", page_icon="📈", layout="wide")
+st.set_page_config(page_title="Suivi détaillé par technicien", layout="wide")
 
-st.title("📊 Suivi Opérationnel D3 - G7 Caraïbes")
+# === CHARGEMENT DES DONNÉES ===
+df = pd.read_excel("/content/drive/MyDrive/New Project/Canal inter.xlsx", sheet_name="SUIVI JOURNALIER CANAL")
 
-# === Chargement des données ===
-df = pd.read_excel("Canal inter.xlsx")
-df = df.rename(columns={"Nom technicien": "NOM"}) if "Nom technicien" in df.columns else df
+# Renommer les colonnes si nécessaire
+if 'Nom technicien' in df.columns:
+    df.rename(columns={"Nom technicien": "NOM"}, inplace=True)
 
-# Nettoyage des colonnes utiles
-colonnes_utiles = [
-    "NOM", "Date", "État", "OT planifiés", "OT Réalisé", 
-    "OT OK", "OT NOK", "OT Reportes", "Taux Réussite", 
-    "Taux Echec", "Taux Cloture", "Taux Report"
-]
-df = df[colonnes_utiles].dropna(subset=["NOM", "Date"])
+# === FILTRE TECHNICIEN ===
+techniciens = df["NOM"].dropna().unique().tolist()
+technicien_choisi = st.selectbox("Choisir un technicien", sorted(techniciens))
+df_filtered = df[df["NOM"] == technicien_choisi]
 
-# Convertir Date si nécessaire
-df["Date"] = pd.to_datetime(df["Date"], errors="coerce")
-df = df.dropna(subset=["Date"])
+# === CALCULS ===
+total_interv = len(df_filtered)
+etat_counts = df_filtered['ETAT'].value_counts()
+ot_real = etat_counts.get("Réalisé", 0)
+ot_report = etat_counts.get("Reporté", 0)
+ot_ok = etat_counts.get("OK", 0)
+ot_nok = etat_counts.get("NOK", 0)
 
-# === Filtres ===
-st.sidebar.header("🔎 Filtres")
-tech_list = sorted(df["NOM"].unique())
-selected_tech = st.sidebar.selectbox("Technicien", tech_list)
-df_tech = df[df["NOM"] == selected_tech]
+fact_codes = df_filtered['FACTURATION'].nunique()
+fact_types = df_filtered['FACTURATION'].value_counts()
 
-# === Indicateurs ===
-total_interv = len(df_tech)
-ot_real = df_tech["OT Réalisé"].sum()
-ot_ok = df_tech["OT OK"].sum()
-ot_nok = df_tech["OT NOK"].sum()
-nb_fact_types = df_tech["État"].nunique()
-
-# Moyennes taux
-taux_ok = df_tech["Taux Réussite"].mean()
-taux_echec = df_tech["Taux Echec"].mean()
-taux_cloture = df_tech["Taux Cloture"].mean()
-taux_report = df_tech["Taux Report"].mean()
-
-# === Affichage des KPIs ===
+# === INDICATEURS ===
 kpi1, kpi2, kpi3, kpi4 = st.columns(4)
 kpi1.metric("Nombre d'interventions", total_interv)
 kpi2.metric("OT Réalisés", int(ot_real))
-kpi3.metric("OT OK / NOK", f"{int(not_ok)} / {int(not_nok)}")
-kpi4.metric("Types d'État rencontrés", nb_fact_types)
+kpi3.metric("OT OK / NOK", f"{ot_ok} / {ot_nok}")
+kpi4.metric("Types d'État rencontrés", len(etat_counts))
 
-col5, col6, col7, col8 = st.columns(4)
-col5.metric("Taux de Réussite", f"{taux_ok:.2f}%")
-col6.metric("Taux d'Échec", f"{taux_echec:.2f}%")
-col7.metric("Taux de Clôture", f"{taux_cloture:.2f}%")
-col8.metric("Taux de Report", f"{taux_report:.2f}%")
+# === GRAPHIQUE : Montant par jour ===
+if 'DATE' in df_filtered.columns and 'STT' in df_filtered.columns:
+    df_filtered['DATE'] = pd.to_datetime(df_filtered['DATE'], errors='coerce')
+    montant_par_jour = df_filtered.groupby('DATE')['STT'].sum().reset_index()
 
-# === Graphe de variation du nombre d'interventions par jour ===
-daily_df = df_tech.groupby("Date")["OT Réalisé"].sum().reset_index()
-line_chart = alt.Chart(daily_df).mark_line(point=True).encode(
-    x="Date:T",
-    y=alt.Y("OT Réalisé:Q", title="OT Réalisé"),
-    tooltip=["Date", "OT Réalisé"]
-).properties(
-    title=f"📈 Évolution des OT Réalisés pour {selected_tech}",
-    width=900,
-    height=350
-)
+    st.subheader("\U0001F4C8 Montant STT par jour")
+    chart = alt.Chart(montant_par_jour).mark_line(point=True).encode(
+        x=alt.X('DATE:T', title='Date'),
+        y=alt.Y('STT:Q', title='Montant STT (€)'),
+        tooltip=['DATE:T', 'STT:Q']
+    ).properties(width=800, height=400)
 
-st.altair_chart(line_chart, use_container_width=True)
+    st.altair_chart(chart, use_container_width=True)
 
-# === Tableau journalier ===
-st.subheader("🗓️ Détail journalier des interventions")
-st.dataframe(df_tech.sort_values("Date", ascending=False).reset_index(drop=True))
+# === TABLEAU DÉTAILLÉ ===
+st.subheader("\U0001F4CA Détails des interventions pour " + technicien_choisi)
+
+colonnes_affichees = ["DATE", "NOM", "FACTURATION", "ETAT", "STT"]
+df_affiche = df_filtered[colonnes_affichees]
+
+# AgGrid
+gb = GridOptionsBuilder.from_dataframe(df_affiche)
+gb.configure_default_column(filter=True, resizable=True)
+gb.configure_pagination()
+options = gb.build()
+
+AgGrid(df_affiche, gridOptions=options, theme="alpine", fit_columns_on_grid_load=True)
+
+# === TAUX DE RÉUSSITE ET ÉCHEC ===
+st.subheader("\U0001F4C9 Taux de Réussite et d'Échec")
+
+if total_interv > 0:
+    taux_reussite = round((ot_ok / total_interv) * 100, 2)
+    taux_echec = round((ot_nok / total_interv) * 100, 2)
+    taux_report = round((ot_report / total_interv) * 100, 2)
+    taux_cloture = round((ot_real / total_interv) * 100, 2)
+
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("% Réussite (OK)", f"{taux_reussite}%")
+    col2.metric("% Échec (NOK)", f"{taux_echec}%")
+    col3.metric("% Reportés", f"{taux_report}%")
+    col4.metric("% Clôturés (Réalisé)", f"{taux_cloture}%")
+else:
+    st.warning("Aucune intervention enregistrée pour ce technicien.")
