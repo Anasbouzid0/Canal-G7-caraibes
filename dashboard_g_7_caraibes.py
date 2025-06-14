@@ -1,5 +1,5 @@
 import streamlit as st
-from st_aggrid import AgGrid, GridOptionsBuilder
+from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode
 import pandas as pd
 import altair as alt
 from io import BytesIO
