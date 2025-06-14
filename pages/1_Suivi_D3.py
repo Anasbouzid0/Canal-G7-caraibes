@@ -68,27 +68,31 @@ if 'Date' in df_filtered.columns and 'OT Réalisé' in df_filtered.columns:
 
     st.altair_chart(chart, use_container_width=True)
 
-# === TABLEAU DÉTAILLÉ ===
-st.subheader(" Détails des interventions pour " + technicien_choisi)
+from io import BytesIO
 
+# === TABLEAU INTERACTIF FILTRÉ + EXPORT EXCEL ===
+st.subheader("📊 Détails des interventions")
+
+# Colonnes affichées dans le tableau
 colonnes_affichees = ["Date", "NOM", "État", "OT planifiés", "OT Réalisé", "OT OK", "OT NOK", "OT Reportes"]
 df_affiche = df_filtered[colonnes_affichees]
 
-# AgGrid personnalisé avec thème streamlit-dark
+# Construction de la grille AgGrid
 gb = GridOptionsBuilder.from_dataframe(df_affiche)
-gb.configure_default_column(filter=True, resizable=True)
+gb.configure_default_column(filter=True, resizable=True, sortable=True)
 gb.configure_pagination(paginationAutoPageSize=True)
 gb.configure_grid_options(domLayout='normal')
 options = gb.build()
 
+# Thème sombre personnalisé
 st.markdown("""
     <style>
     .ag-theme-streamlit-dark {
-        background-color: #2e2e2e !important;
-        color: white !important;
+        background-color: #1e1e1e !important;
+        color: #f0f0f0 !important;
     }
     .ag-theme-streamlit-dark .ag-header-cell-label {
-        color: white !important;
+        color: #ffffff !important;
     }
     .ag-theme-streamlit-dark .ag-row, .ag-theme-streamlit-dark .ag-cell {
         background-color: #1e1e1e !important;
@@ -97,13 +101,33 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+# Affichage du tableau
 AgGrid(
     df_affiche,
     gridOptions=options,
     theme="streamlit-dark",
     fit_columns_on_grid_load=True,
     update_mode=GridUpdateMode.NO_UPDATE,
-    height=400
+    height=420
+)
+
+# === BOUTON D'EXPORT EXCEL ===
+
+def convertir_excel(df):
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+        df.to_excel(writer, index=False, sheet_name="Interventions")
+        writer.save()
+    return output.getvalue()
+
+fichier_excel = convertir_excel(df_affiche)
+nom_fichier = "Interventions_Tous.xlsx" if technicien_choisi == "Tous" else f"Interventions_{technicien_choisi.replace(' ', '_')}.xlsx"
+
+st.download_button(
+    label="📥 Télécharger tableau Excel",
+    data=fichier_excel,
+    file_name=nom_fichier,
+    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 )
 
 # === TAUX DE RÉUSSITE ET ÉCHEC ===
