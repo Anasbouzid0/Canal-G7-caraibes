@@ -3,6 +3,14 @@ import pandas as pd
 import altair as alt
 from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode
 
+
+
+# Blocage si non connecté
+if "authenticated" not in st.session_state or not st.session_state.authenticated:
+    st.error("❌ Accès refusé. Veuillez d'abord vous connecter depuis la page d'accueil.")
+    st.stop()
+
+
 st.set_page_config(page_title="Suivi détaillé par technicien", layout="wide")
 
 # === CHARGEMENT DES DONNÉES ===
