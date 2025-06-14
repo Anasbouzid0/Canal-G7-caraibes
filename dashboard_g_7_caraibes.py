@@ -49,7 +49,7 @@ ch2.altair_chart(chart2, use_container_width=True)
 
 
 # === TABLEAU DES CODES FACTURATION + TRAVAUX SUPPLÉMENTAIRES (THÈME STREAMLIT) ===
-st.subheader("Répartition globale des codes (Facturation + Travaux Supplémentaires)")
+st.subheader("Répartition globale Facturation / Travaux Supplémentaires")
 
 # Nettoyage des colonnes
 df_filtered["FACTURATION"] = df_filtered["FACTURATION"].fillna("")
@@ -81,7 +81,7 @@ grid_options_codes = gb_codes.build()
 AgGrid(
     code_counts_df,
     gridOptions=grid_options_codes,
-    height=160,
+    height=70,
     fit_columns_on_grid_load=True,
     update_mode=GridUpdateMode.NO_UPDATE,
     theme="streamlit"
