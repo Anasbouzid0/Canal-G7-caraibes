@@ -21,38 +21,33 @@ st.subheader(" Suivi des interventions")
 techniciens = df["NOM"].dropna().unique().tolist()
 techniciens.insert(0, "Tous")  # Ajouter l'option "Tous"
 
-# Afficher les totaux globaux avant toute sélection
-df_filtered = df.copy()
+# === Suivi dynamique des interventions ===
+st.subheader("📊 Suivi des interventions")
+
+# Liste des techniciens avec option "Tous"
+techniciens = df["NOM"].dropna().unique().tolist()
+techniciens.insert(0, "Tous")
+
+# Sélection du technicien
+technicien_choisi = st.selectbox("Choisir un technicien", sorted(techniciens))
+
+# Filtrage dynamique
+df_filtered = df.copy() if technicien_choisi == "Tous" else df[df["NOM"] == technicien_choisi]
+
+# Calculs
 total_planifies = df_filtered['OT planifiés'].sum()
 ot_real = df_filtered['OT Réalisé'].sum()
 ot_ok = df_filtered['OT OK'].sum()
 ot_nok = df_filtered['OT NOK'].sum()
 ot_report = df_filtered['OT Reportes'].sum()
 
-# Barre KPI initiale
+# Affichage dynamique — UNE seule barre
 kpi1, kpi2, kpi3, kpi4 = st.columns(4)
 kpi1.metric("OT Planifiés", int(total_planifies))
 kpi2.metric("OT Réalisés", int(ot_real))
 kpi3.metric("OT OK / NOK", f"{int(ot_ok)} / {int(ot_nok)}")
 kpi4.metric("OT Reportés", int(ot_report))
 
-# Sélecteur de technicien
-technicien_choisi = st.selectbox("Choisir un technicien", sorted(techniciens))
-
-# S'il y a une sélection autre que "Tous", recalculer les totaux pour ce technicien
-if technicien_choisi != "Tous":
-    df_filtered = df[df["NOM"] == technicien_choisi]
-    total_planifies = df_filtered['OT planifiés'].sum()
-    ot_real = df_filtered['OT Réalisé'].sum()
-    ot_ok = df_filtered['OT OK'].sum()
-    ot_nok = df_filtered['OT NOK'].sum()
-    ot_report = df_filtered['OT Reportes'].sum()
-
-    # Mettre à jour dynamiquement les KPIs
-    kpi1.metric("OT Planifiés", int(total_planifies))
-    kpi2.metric("OT Réalisés", int(ot_real))
-    kpi3.metric("OT OK / NOK", f"{int(ot_ok)} / {int(ot_nok)}")
-    kpi4.metric("OT Reportés", int(ot_report))
 
 # === CALCULS MOYENNES DES TAUX ===
 taux_cols = ['Taux Réussite', 'Taux Echec', 'Taux Report', 'Taux Cloture']
