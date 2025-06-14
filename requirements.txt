@@ -12,7 +12,7 @@ xlsxwriter==3.2.0
 openpyxl==3.1.2
 
 # Tableaux dynamiques
-st-aggrid==0.3.3
+streamlit-aggrid==0.3.3
 
 # Moteur Excel avec Pandas
 pyxlsb==1.0.10
