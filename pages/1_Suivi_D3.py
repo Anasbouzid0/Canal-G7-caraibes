@@ -58,26 +58,24 @@ if 'Date' in df_filtered.columns and 'OT Réalisé' in df_filtered.columns:
     st.altair_chart(chart, use_container_width=True)
 
 # === TABLEAU DÉTAILLÉ ===
-# === TABLEAU PRINCIPAL INTERACTIF & SOMBRE ===
-st.subheader("📋 Détails des interventions")
 
-# Construction des options AgGrid
-gb = GridOptionsBuilder.from_dataframe(df_filtered)
-gb.configure_default_column(
-    filter=True,
-    sortable=True,
-    resizable=True
-)
+from io import BytesIO
+
+# === TABLEAU INTERACTIF FILTRÉ + EXPORT EXCEL ===
+st.subheader("📊 Détails des interventions")
+
+# Colonnes affichées dans le tableau
+colonnes_affichees = ["Date", "NOM", "État", "OT planifiés", "OT Réalisé", "OT OK", "OT NOK", "OT Reportes"]
+df_affiche = df_filtered[colonnes_affichees]
+
+# Construction de la grille AgGrid
+gb = GridOptionsBuilder.from_dataframe(df_affiche)
+gb.configure_default_column(filter=True, resizable=True, sortable=True)
 gb.configure_pagination(paginationAutoPageSize=True)
-gb.configure_side_bar()  # active les filtres et colonnes
-grid_options = gb.build()
+gb.configure_grid_options(domLayout='normal')
+options = gb.build()
 
-# Barre de recherche
-search = st.text_input("🔍 Recherche dans le tableau")
-if search:
-    grid_options["quickFilterText"] = search
-
-# Thème sombre CSS personnalisé
+# Thème sombre personnalisé
 st.markdown("""
     <style>
     .ag-theme-streamlit-dark {
@@ -96,15 +94,13 @@ st.markdown("""
 
 # Affichage du tableau
 AgGrid(
-    df_filtered,
-    gridOptions=grid_options,
+    df_affiche,
+    gridOptions=options,
     theme="streamlit-dark",
     fit_columns_on_grid_load=True,
     update_mode=GridUpdateMode.NO_UPDATE,
     height=420
 )
-
-
 # === BOUTON D'EXPORT EXCEL ===
 
 def convertir_excel(df):
