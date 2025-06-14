@@ -46,42 +46,49 @@ ch1, ch2 = st.columns(2)
 ch1.altair_chart(chart1, use_container_width=True)
 ch2.altair_chart(chart2, use_container_width=True)
 
-# === TABLEAU HORIZONTAL : Répartition des codes de TRAVAUX SUPPLEMENTAIRES ===
-st.subheader("Répartition des types de facturation et travaux supplémentaires")
+# === TABLEAU HORIZONTAL : Répartition combinée des codes (FACTURATION + TRAVAUX SUPPLEMENTAIRES) ===
+st.subheader("Répartition globale des codes (facturation et travaux supplémentaires)")
 
-# Nettoyage des colonnes au cas où
+# Nettoyage des colonnes
 df_filtered["FACTURATION"] = df_filtered["FACTURATION"].fillna("")
 df_filtered["TRAVAUX SUPPLEMENTAIRES"] = df_filtered["TRAVAUX SUPPLEMENTAIRES"].fillna("")
 
-# Concaténation des deux colonnes
-combinaison = df_filtered["TRAVAUX SUPPLEMENTAIRES"].str.split(",", expand=True).stack().str.strip()
-fact_trav = df_filtered.loc[combinaison.index.get_level_values(0), "FACTURATION"].reset_index(drop=True)
-ts_df = pd.DataFrame({
-    "FACTURATION": fact_trav,
-    "TRAVAUX_SUPP": combinaison.values
-})
+# Combiner les deux colonnes en une seule liste de codes
+fact_codes = df_filtered["FACTURATION"].astype(str).str.split(r"[,\s]+")
+ts_codes = df_filtered["TRAVAUX SUPPLEMENTAIRES"].astype(str).str.split(r"[,\s]+")
 
-# Comptage des occurrences
-pivot_ts = ts_df["TRAVAUX_SUPP"].value_counts().sort_index().to_frame().T
-pivot_ts.index = ["Nombre"]
+# Fusionner toutes les lignes de FACTURATION et TRAVAUX en une seule Series
+all_codes = fact_codes.explode().append(ts_codes.explode()).str.strip()
+all_codes = all_codes[all_codes != ""]  # Retirer les vides
 
-# Construction du tableau sombre
-gb_ts = GridOptionsBuilder.from_dataframe(pivot_ts)
-gb_ts.configure_default_column(
-    filter=True, 
-    resizable=True, 
-    cellStyle={"textAlign": "center", "backgroundColor": "#111111", "color": "#EEEEEE", "fontWeight": "bold"}
+# Compter les occurrences de chaque code
+code_counts = all_codes.value_counts().sort_index()
+code_counts_df = pd.DataFrame(code_counts).T  # ligne unique, codes en colonnes
+code_counts_df.index = ["Nombre"]
+
+# Affichage dans AgGrid sombre
+from st_aggrid import AgGrid, GridOptionsBuilder
+
+gb_combined = GridOptionsBuilder.from_dataframe(code_counts_df)
+gb_combined.configure_default_column(
+    filter=True,
+    resizable=True,
+    cellStyle={
+        "backgroundColor": "#1e1e1e",
+        "color": "#f1f1f1",
+        "textAlign": "center",
+        "fontWeight": "bold"
+    }
 )
-grid_options_ts = gb_ts.build()
+grid_options_combined = gb_combined.build()
 
 AgGrid(
-    pivot_ts,
-    gridOptions=grid_options_ts,
-    theme="alpine",  # Utilisation du thème sombre existant
-    height=150,
+    code_counts_df,
+    gridOptions=grid_options_combined,
+    theme="alpine",  # ou "material", "balham-dark"
+    height=160,
     fit_columns_on_grid_load=True
 )
-
 
 # === TABLEAU PRINCIPAL ===
 st.subheader("Détails des interventions")
