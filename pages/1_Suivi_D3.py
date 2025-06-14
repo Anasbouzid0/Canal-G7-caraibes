@@ -13,7 +13,7 @@ if 'Nom technicien' in df.columns:
     df.rename(columns={"Nom technicien": "NOM"}, inplace=True)
 
 # === SUIVI DYNAMIQUE DES INTERVENTIONS ===
-
+st.subheader("Suivi des interventions")
 
 # Liste des techniciens avec "Tous"
 techniciens = df["NOM"].dropna().unique().tolist()
