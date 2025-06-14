@@ -46,24 +46,42 @@ ch1, ch2 = st.columns(2)
 ch1.altair_chart(chart1, use_container_width=True)
 ch2.altair_chart(chart2, use_container_width=True)
 
-# === TABLEAU HORIZONTAL : Types de facturation ===
-st.subheader(" Répartition des types de facturation")
-fact_counts = df_filtered["FACTURATION"].value_counts().sort_index()
-fact_row = pd.DataFrame(fact_counts).T
-fact_row.index = ["Nombre"]
+# === TABLEAU HORIZONTAL : Répartition des codes de TRAVAUX SUPPLEMENTAIRES ===
+st.subheader("Répartition des types de facturation et travaux supplémentaires")
 
-# AgGrid horizontal
-gb_fact = GridOptionsBuilder.from_dataframe(fact_row)
-gb_fact.configure_default_column(filter=True, resizable=True, cellStyle={'textAlign': 'center'})
-grid_options_fact = gb_fact.build()
+# Nettoyage des colonnes au cas où
+df_filtered["FACTURATION"] = df_filtered["FACTURATION"].fillna("")
+df_filtered["TRAVAUX SUPPLEMENTAIRES"] = df_filtered["TRAVAUX SUPPLEMENTAIRES"].fillna("")
+
+# Concaténation des deux colonnes
+combinaison = df_filtered["TRAVAUX SUPPLEMENTAIRES"].str.split(",", expand=True).stack().str.strip()
+fact_trav = df_filtered.loc[combinaison.index.get_level_values(0), "FACTURATION"].reset_index(drop=True)
+ts_df = pd.DataFrame({
+    "FACTURATION": fact_trav,
+    "TRAVAUX_SUPP": combinaison.values
+})
+
+# Comptage des occurrences
+pivot_ts = ts_df["TRAVAUX_SUPP"].value_counts().sort_index().to_frame().T
+pivot_ts.index = ["Nombre"]
+
+# Construction du tableau sombre
+gb_ts = GridOptionsBuilder.from_dataframe(pivot_ts)
+gb_ts.configure_default_column(
+    filter=True, 
+    resizable=True, 
+    cellStyle={"textAlign": "center", "backgroundColor": "#111111", "color": "#EEEEEE", "fontWeight": "bold"}
+)
+grid_options_ts = gb_ts.build()
 
 AgGrid(
-    fact_row,
-    gridOptions=grid_options_fact,
-    theme="blue",
-    height=120,
+    pivot_ts,
+    gridOptions=grid_options_ts,
+    theme="alpine",  # Utilisation du thème sombre existant
+    height=150,
     fit_columns_on_grid_load=True
 )
+
 
 # === TABLEAU PRINCIPAL ===
 st.subheader("Détails des interventions")
