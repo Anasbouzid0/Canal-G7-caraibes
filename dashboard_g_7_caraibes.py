@@ -24,7 +24,7 @@ col1.metric("Montant GSET (€)", f"{df_filtered['GSET'].sum():,.2f}")
 col2.metric("Montant STT (€)", f"{df_filtered['STT'].sum():,.2f}")
 col3.metric("Nombre de Ref PXO", f"{df_filtered['Ref PXO'].count()}")
 
-# === GRAPHIQUES ===
+# === GRAPHIQUES TECHNICIENS ===
 grouped = df_filtered.groupby("TECHNICIEN").agg(
     STT=("STT", "sum"),
     RefCount=("Ref PXO", "count")
@@ -46,38 +46,30 @@ ch1, ch2 = st.columns(2)
 ch1.altair_chart(chart1, use_container_width=True)
 ch2.altair_chart(chart2, use_container_width=True)
 
-
-
-# === TABLEAU DES CODES FACTURATION + TRAVAUX SUPPLÉMENTAIRES (THÈME STREAMLIT) ===
+# === TABLEAU DES CODES FACTURATION + TRAVAUX SUPPLÉMENTAIRES ===
 st.subheader("Répartition globale Facturation / Travaux Supplémentaires")
-
-# Nettoyage des colonnes
 df_filtered["FACTURATION"] = df_filtered["FACTURATION"].fillna("")
 df_filtered["TRAVAUX SUPPLEMENTAIRES"] = df_filtered["TRAVAUX SUPPLEMENTAIRES"].fillna("")
 
-# Extraction des codes
 fact_codes = df_filtered["FACTURATION"].astype(str).str.upper().str.split(r"[,\s]+")
 travaux_codes = df_filtered["TRAVAUX SUPPLEMENTAIRES"].astype(str).str.upper().str.split(r"[,\s]+")
 
-# Explosion + concaténation
 fact_exploded = fact_codes.explode()
 ts_exploded = travaux_codes.explode()
-all_codes = pd.concat([fact_exploded, ts_exploded])
-all_codes = all_codes.astype(str).str.strip()
+
+all_codes = pd.concat([fact_exploded, ts_exploded]).astype(str).str.strip()
 all_codes = all_codes[all_codes != ""]
 
-# Comptage
 code_counts = all_codes.value_counts().sort_index()
 code_counts_df = pd.DataFrame(code_counts).T
 code_counts_df.index = ["Nombre"]
 
-# Construction de la grille AgGrid
+# === TABLEAU AgGrid ===
 gb_codes = GridOptionsBuilder.from_dataframe(code_counts_df)
 gb_codes.configure_default_column(filter=True, sortable=True, resizable=True, cellStyle={"textAlign": "center"})
 gb_codes.configure_pagination()
 grid_options_codes = gb_codes.build()
 
-# Affichage avec thème "streamlit"
 AgGrid(
     code_counts_df,
     gridOptions=grid_options_codes,
@@ -88,8 +80,7 @@ AgGrid(
 )
 
 # === GRAPHIQUE 1 : Barres verticales (nombre d'occurrences) ===
-st.subheader("📊 Répartition des codes – Nombre d’occurrences")
-
+st.subheader("Répartition des codes – Nombre d’occurrences")
 code_counts_long = code_counts.reset_index()
 code_counts_long.columns = ["Code", "Nombre"]
 
@@ -101,9 +92,8 @@ chart_counts = alt.Chart(code_counts_long).mark_bar(size=30).encode(
 
 st.altair_chart(chart_counts, use_container_width=True)
 
-# === GRAPHIQUE 2 : Camembert (répartition en %) ===
-st.subheader("📈 Répartition des codes – Pourcentages")
-
+# === GRAPHIQUE 2 : Camembert pourcentages ===
+st.subheader("Répartition des codes – Pourcentages")
 code_counts_long["Pourcentage"] = (code_counts_long["Nombre"] / code_counts_long["Nombre"].sum()) * 100
 chart_pie = alt.Chart(code_counts_long).mark_arc(innerRadius=60).encode(
     theta=alt.Theta(field="Nombre", type="quantitative"),
@@ -129,10 +119,10 @@ AgGrid(df_filtered, gridOptions=grid_options, height=350)
 
 # === EXPORT CSV ===
 csv = df_filtered.to_csv(index=False).encode('utf-8')
-st.download_button("📥 Télécharger CSV", csv, file_name="G7_data.csv", mime="text/csv")
+st.download_button("📅 Télécharger CSV", csv, file_name="G7_data.csv", mime="text/csv")
 
 # === EXPORT EXCEL ===
 buffer = BytesIO()
 with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
     df_filtered.to_excel(writer, index=False, sheet_name="Feuille1")
-st.download_button("📥 Télécharger Excel", buffer.getvalue(), file_name="G7_data.xlsx", mime="application/vnd.ms-excel")
+st.download_button("📅 Télécharger Excel", buffer.getvalue(), file_name="G7_data.xlsx", mime="application/vnd.ms-excel")
