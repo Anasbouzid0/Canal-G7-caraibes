@@ -41,15 +41,26 @@ kpi3.metric("OT OK / NOK", f"{int(ot_ok)} / {int(ot_nok)}")
 kpi4.metric("OT Reportés", int(ot_report))
 
 
-# === CALCULS MOYENNES DES TAUX ===
-taux_cols = ['Taux Réussite', 'Taux Echec', 'Taux Report', 'Taux Cloture']
-for col in taux_cols:
-    df_filtered[col] = pd.to_numeric(df_filtered[col], errors='coerce')
+# === TAUX CALCULÉS DYNAMIQUEMENT ===
+st.subheader(" Taux de performance (%)")
 
-moy_taux_reussite = df_filtered['Taux Réussite'].mean()
-moy_taux_echec = df_filtered['Taux Echec'].mean()
-moy_taux_report = df_filtered['Taux Report'].mean()
-moy_taux_cloture = df_filtered['Taux Cloture'].mean()
+# Sécurité : éviter la division par zéro
+def safe_div(numerator, denominator):
+    return (numerator / denominator * 100) if denominator != 0 else 0.0
+
+# Calculs directs
+taux_reussite = safe_div(ot_ok, ot_real)
+taux_echec = safe_div(ot_nok, ot_real)
+taux_report = safe_div(ot_report, total_planifies)
+taux_cloture = safe_div(ot_real, total_planifies)
+
+# Affichage formaté
+col1, col2, col3, col4 = st.columns(4)
+col1.metric("% Réussite (OK)", f"{taux_reussite:.2f}%")
+col2.metric("% Échec (NOK)", f"{taux_echec:.2f}%")
+col3.metric("% Reportés", f"{taux_report:.2f}%")
+col4.metric("% Clôturés", f"{taux_cloture:.2f}%")
+
 
 
 # === GRAPHIQUE : OT Réalisés par jour avec jour du mois ===
