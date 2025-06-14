@@ -48,51 +48,43 @@ ch2.altair_chart(chart2, use_container_width=True)
 
 
 
-# === RÉPARTITION COMBINÉE DES CODES FACTURATION + TRAVAUX SUPPLÉMENTAIRES ===
+# === TABLEAU DES CODES FACTURATION + TRAVAUX SUPPLÉMENTAIRES (THÈME STREAMLIT) ===
 st.subheader("Répartition globale des codes (Facturation + Travaux Supplémentaires)")
 
 # Nettoyage des colonnes
 df_filtered["FACTURATION"] = df_filtered["FACTURATION"].fillna("")
 df_filtered["TRAVAUX SUPPLEMENTAIRES"] = df_filtered["TRAVAUX SUPPLEMENTAIRES"].fillna("")
 
-# Séparation des codes (par espace ou virgule)
+# Extraction des codes
 fact_codes = df_filtered["FACTURATION"].astype(str).str.upper().str.split(r"[,\s]+")
 travaux_codes = df_filtered["TRAVAUX SUPPLEMENTAIRES"].astype(str).str.upper().str.split(r"[,\s]+")
 
-# Explosion des listes en lignes individuelles
+# Explosion + concaténation
 fact_exploded = fact_codes.explode()
 ts_exploded = travaux_codes.explode()
-
-# Concaténation correcte
 all_codes = pd.concat([fact_exploded, ts_exploded])
 all_codes = all_codes.astype(str).str.strip()
-all_codes = all_codes[all_codes != ""]  # Supprimer les vides
+all_codes = all_codes[all_codes != ""]
 
-# Comptage des codes
+# Comptage
 code_counts = all_codes.value_counts().sort_index()
-code_counts_df = pd.DataFrame(code_counts).T  # une seule ligne, comme dans ta capture
+code_counts_df = pd.DataFrame(code_counts).T
 code_counts_df.index = ["Nombre"]
 
-# Grille sombre AgGrid
+# Construction de la grille AgGrid
 gb_codes = GridOptionsBuilder.from_dataframe(code_counts_df)
-gb_codes.configure_default_column(
-    filter=True,
-    resizable=True,
-    cellStyle={
-        "backgroundColor": "#1e1e1e",
-        "color": "#ffffff",
-        "textAlign": "center",
-        "fontWeight": "bold"
-    }
-)
-grid_options = gb_codes.build()
+gb_codes.configure_default_column(filter=True, sortable=True, resizable=True, cellStyle={"textAlign": "center"})
+gb_codes.configure_pagination()
+grid_options_codes = gb_codes.build()
 
+# Affichage avec thème "streamlit"
 AgGrid(
     code_counts_df,
-    gridOptions=grid_options,
-    theme="balham-dark",  # autres options : "material", "balham-dark"
+    gridOptions=grid_options_codes,
     height=160,
-    fit_columns_on_grid_load=True
+    fit_columns_on_grid_load=True,
+    update_mode=GridUpdateMode.NO_UPDATE,
+    theme="streamlit"
 )
 
 # === TABLEAU PRINCIPAL ===
