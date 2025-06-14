@@ -46,46 +46,52 @@ ch1, ch2 = st.columns(2)
 ch1.altair_chart(chart1, use_container_width=True)
 ch2.altair_chart(chart2, use_container_width=True)
 
-# === TABLEAU HORIZONTAL : Répartition combinée des codes (FACTURATION + TRAVAUX SUPPLEMENTAIRES) ===
-st.subheader("Répartition globale des codes (facturation et travaux supplémentaires)")
 
-# Nettoyage des colonnes
+
+# === RÉPARTITION COMBINÉE DES CODES FACTURATION + TRAVAUX SUPPLÉMENTAIRES ===
+st.subheader("Répartition globale des codes (Facturation + Travaux Supplémentaires)")
+
+# Nettoyage : valeurs manquantes remplacées par chaînes vides
 df_filtered["FACTURATION"] = df_filtered["FACTURATION"].fillna("")
 df_filtered["TRAVAUX SUPPLEMENTAIRES"] = df_filtered["TRAVAUX SUPPLEMENTAIRES"].fillna("")
 
-# Combiner les deux colonnes en une seule liste de codes
-fact_codes = df_filtered["FACTURATION"].astype(str).str.split(r"[,\s]+")
-ts_codes = df_filtered["TRAVAUX SUPPLEMENTAIRES"].astype(str).str.split(r"[,\s]+")
+# Extraction des codes en séparant les mots (espaces, virgules...)
+fact_codes = df_filtered["FACTURATION"].astype(str).str.upper().str.split(r"[,\s]+")
+travaux_codes = df_filtered["TRAVAUX SUPPLEMENTAIRES"].astype(str).str.upper().str.split(r"[,\s]+")
 
-# Fusionner toutes les lignes de FACTURATION et TRAVAUX en une seule Series
-all_codes = fact_codes.explode().append(ts_codes.explode()).str.strip()
-all_codes = all_codes[all_codes != ""]  # Retirer les vides
+# Explosion ligne par ligne
+fact_exploded = fact_codes.explode()
+ts_exploded = travaux_codes.explode()
 
-# Compter les occurrences de chaque code
+# Concaténation + nettoyage des chaînes
+all_codes = pd.concat([fact_exploded, ts_exploded])
+all_codes = all_codes.astype(str).str.strip()
+all_codes = all_codes[all_codes != ""]  # suppression des blancs
+
+# Comptage des occurrences de chaque code
 code_counts = all_codes.value_counts().sort_index()
-code_counts_df = pd.DataFrame(code_counts).T  # ligne unique, codes en colonnes
+code_counts_df = pd.DataFrame(code_counts).T  # format horizontal (ligne unique)
 code_counts_df.index = ["Nombre"]
 
-# Affichage dans AgGrid sombre
-from st_aggrid import AgGrid, GridOptionsBuilder
-
-gb_combined = GridOptionsBuilder.from_dataframe(code_counts_df)
-gb_combined.configure_default_column(
+# Construction du tableau sombre avec AgGrid
+gb_codes = GridOptionsBuilder.from_dataframe(code_counts_df)
+gb_codes.configure_default_column(
     filter=True,
     resizable=True,
     cellStyle={
         "backgroundColor": "#1e1e1e",
-        "color": "#f1f1f1",
+        "color": "#ffffff",
         "textAlign": "center",
         "fontWeight": "bold"
     }
 )
-grid_options_combined = gb_combined.build()
+grid_options = gb_codes.build()
 
+# Affichage du tableau
 AgGrid(
     code_counts_df,
-    gridOptions=grid_options_combined,
-    theme="alpine",  # ou "material", "balham-dark"
+    gridOptions=grid_options,
+    theme="alpine",  # autres options : "material", "balham-dark"
     height=160,
     fit_columns_on_grid_load=True
 )
