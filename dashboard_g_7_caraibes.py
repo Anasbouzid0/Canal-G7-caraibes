@@ -5,6 +5,12 @@ import altair as alt
 from io import BytesIO
 from PIL import Image
 
+
+# Blocage si non connecté
+if "authenticated" not in st.session_state or not st.session_state.authenticated:
+    st.error("❌ Accès refusé. Veuillez d'abord vous connecter depuis la page d'accueil.")
+    st.stop()
+
 st.set_page_config(page_title="Dashboard G7 Caraïbes", layout="wide")
 
 # === CHARGEMENT DES DONNÉES ===
