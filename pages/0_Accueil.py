@@ -1,25 +1,25 @@
 import streamlit as st
 
-st.set_page_config(page_title="Connexion", layout="centered")
+# Simuler une base d’utilisateurs
+USERS = {
+    "admin@gmail.com": "admin123",
+    "autre@gmail.com": "azerty"
+}
 
-LOGIN_EMAIL = "admin@g7caraibes.com"
-LOGIN_PASSWORD = "secret123"
+st.set_page_config(page_title="Authentification", layout="centered")
 
-if "logged_in" not in st.session_state:
-    st.session_state.logged_in = False
+st.title("🔐 Connexion sécurisée")
 
-st.title("🔐 Dashboard G7 Caraïbes")
-st.markdown("### Connectez-vous pour continuer.")
+email = st.text_input("Email")
+password = st.text_input("Mot de passe", type="password")
+login_btn = st.button("Se connecter")
 
-with st.form("login_form"):
-    email = st.text_input("Email")
-    password = st.text_input("Mot de passe", type="password")
-    submit = st.form_submit_button("Connexion")
-
-    if submit:
-        if email == LOGIN_EMAIL and password == LOGIN_PASSWORD:
-            st.session_state.logged_in = True
-            st.success("✅ Connexion réussie. Accès débloqué.")
-            st.experimental_rerun()
-        else:
-            st.error("❌ Identifiants incorrects")
+if login_btn:
+    if email in USERS and USERS[email] == password:
+        st.session_state.authenticated = True
+        st.success("✅ Connexion réussie")
+        # Redirection vers la page Accueil après connexion
+        st.experimental_set_query_params(page="Accueil")
+        st.rerun()
+    else:
+        st.error("❌ Identifiants invalides")
