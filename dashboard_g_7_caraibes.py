@@ -90,7 +90,7 @@ grid_options = gb_codes.build()
 AgGrid(
     code_counts_df,
     gridOptions=grid_options,
-    theme="alpine",  # autres options : "material", "balham-dark"
+    theme="streamlit",  # autres options : "material", "balham-dark"
     height=160,
     fit_columns_on_grid_load=True
 )
