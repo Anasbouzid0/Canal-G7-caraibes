@@ -74,10 +74,6 @@ gb.configure_pagination()
 gb.configure_side_bar()
 grid_options = gb.build()
 
-# Zone de recherche
-search = st.text_input("🔍 Recherche dans le tableau")
-if search:
-    grid_options["quickFilterText"] = search
 
 AgGrid(
     df_affiche,
