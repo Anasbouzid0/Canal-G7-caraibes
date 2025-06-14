@@ -78,14 +78,14 @@ options = gb.build()
 # Thème sombre personnalisé
 st.markdown("""
     <style>
-    .ag-theme-streamlit-dark {
+    .ag-theme-dark {
         background-color: #1e1e1e !important;
         color: #f0f0f0 !important;
     }
-    .ag-theme-streamlit-dark .ag-header-cell-label {
+    .ag-theme-dark .ag-header-cell-label {
         color: #ffffff !important;
     }
-    .ag-theme-streamlit-dark .ag-row, .ag-theme-streamlit-dark .ag-cell {
+    .ag-theme-dark .ag-row, .ag-theme-dark .ag-cell {
         background-color: #1e1e1e !important;
         color: #f0f0f0 !important;
     }
@@ -96,7 +96,7 @@ st.markdown("""
 AgGrid(
     df_affiche,
     gridOptions=options,
-    theme="streamlit-dark",
+    theme="dark",
     fit_columns_on_grid_load=True,
     update_mode=GridUpdateMode.NO_UPDATE,
     height=420
