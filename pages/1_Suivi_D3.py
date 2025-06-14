@@ -79,14 +79,13 @@ search = st.text_input("🔍 Recherche dans le tableau")
 if search:
     grid_options["quickFilterText"] = search
 
-# ✅ Utilisation du thème sombre intégré d'AgGrid
 AgGrid(
     df_affiche,
     gridOptions=grid_options,
     height=420,
     fit_columns_on_grid_load=True,
     update_mode=GridUpdateMode.NO_UPDATE,
-    theme="balham-dark"  # ✅ thème sombre réel
+    theme="streamlit"
 )
 
 # === BOUTON D'EXPORT EXCEL ===
