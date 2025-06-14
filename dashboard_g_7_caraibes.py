@@ -92,16 +92,6 @@ chart_counts = alt.Chart(code_counts_long).mark_bar(size=30).encode(
 
 st.altair_chart(chart_counts, use_container_width=True)
 
-# === GRAPHIQUE 2 : Camembert pourcentages ===
-st.subheader("Répartition des codes – Pourcentages")
-code_counts_long["Pourcentage"] = (code_counts_long["Nombre"] / code_counts_long["Nombre"].sum()) * 100
-chart_pie = alt.Chart(code_counts_long).mark_arc(innerRadius=60).encode(
-    theta=alt.Theta(field="Nombre", type="quantitative"),
-    color=alt.Color(field="Code", type="nominal"),
-    tooltip=["Code", alt.Tooltip("Pourcentage:Q", format=".2f")]
-).properties(width=500, height=400)
-
-st.altair_chart(chart_pie, use_container_width=False)
 
 # === TABLEAU PRINCIPAL ===
 st.subheader("Détails des interventions")
