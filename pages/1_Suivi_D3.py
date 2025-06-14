@@ -62,7 +62,7 @@ if 'Date' in df_filtered.columns and 'OT Réalisé' in df_filtered.columns:
 from io import BytesIO
 
 # === TABLEAU INTERACTIF FILTRÉ + EXPORT EXCEL ===
-st.subheader("📊 Détails des interventions")
+st.subheader("Détails des interventions")
 
 # Colonnes affichées dans le tableau
 colonnes_affichees = ["Date", "NOM", "État", "OT planifiés", "OT Réalisé", "OT OK", "OT NOK", "OT Reportes"]
