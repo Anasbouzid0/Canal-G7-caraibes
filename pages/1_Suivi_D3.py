@@ -12,17 +12,47 @@ df = pd.read_excel("Canal inter.xlsx", sheet_name="SUIVI JOURNALIER CANAL")
 if 'Nom technicien' in df.columns:
     df.rename(columns={"Nom technicien": "NOM"}, inplace=True)
 
-# === FILTRE TECHNICIEN ===
-techniciens = df["NOM"].dropna().unique().tolist()
-technicien_choisi = st.selectbox("Choisir un technicien", sorted(techniciens))
-df_filtered = df[df["NOM"] == technicien_choisi]
+# === KPIs dynamiques avec total global par défaut ===
 
-# === CALCULS ===
+# Titre principal
+st.subheader(" Suivi des interventions")
+
+# Préparer la liste des techniciens avec option "Tous"
+techniciens = df["NOM"].dropna().unique().tolist()
+techniciens.insert(0, "Tous")  # Ajouter l'option "Tous"
+
+# Afficher les totaux globaux avant toute sélection
+df_filtered = df.copy()
 total_planifies = df_filtered['OT planifiés'].sum()
 ot_real = df_filtered['OT Réalisé'].sum()
 ot_ok = df_filtered['OT OK'].sum()
 ot_nok = df_filtered['OT NOK'].sum()
 ot_report = df_filtered['OT Reportes'].sum()
+
+# Barre KPI initiale
+kpi1, kpi2, kpi3, kpi4 = st.columns(4)
+kpi1.metric("OT Planifiés", int(total_planifies))
+kpi2.metric("OT Réalisés", int(ot_real))
+kpi3.metric("OT OK / NOK", f"{int(ot_ok)} / {int(ot_nok)}")
+kpi4.metric("OT Reportés", int(ot_report))
+
+# Sélecteur de technicien
+technicien_choisi = st.selectbox("Choisir un technicien", sorted(techniciens))
+
+# S'il y a une sélection autre que "Tous", recalculer les totaux pour ce technicien
+if technicien_choisi != "Tous":
+    df_filtered = df[df["NOM"] == technicien_choisi]
+    total_planifies = df_filtered['OT planifiés'].sum()
+    ot_real = df_filtered['OT Réalisé'].sum()
+    ot_ok = df_filtered['OT OK'].sum()
+    ot_nok = df_filtered['OT NOK'].sum()
+    ot_report = df_filtered['OT Reportes'].sum()
+
+    # Mettre à jour dynamiquement les KPIs
+    kpi1.metric("OT Planifiés", int(total_planifies))
+    kpi2.metric("OT Réalisés", int(ot_real))
+    kpi3.metric("OT OK / NOK", f"{int(ot_ok)} / {int(ot_nok)}")
+    kpi4.metric("OT Reportés", int(ot_report))
 
 # === CALCULS MOYENNES DES TAUX ===
 taux_cols = ['Taux Réussite', 'Taux Echec', 'Taux Report', 'Taux Cloture']
