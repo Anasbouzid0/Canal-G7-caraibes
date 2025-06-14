@@ -51,29 +51,29 @@ ch2.altair_chart(chart2, use_container_width=True)
 # === RÉPARTITION COMBINÉE DES CODES FACTURATION + TRAVAUX SUPPLÉMENTAIRES ===
 st.subheader("Répartition globale des codes (Facturation + Travaux Supplémentaires)")
 
-# Nettoyage : valeurs manquantes remplacées par chaînes vides
+# Nettoyage des colonnes
 df_filtered["FACTURATION"] = df_filtered["FACTURATION"].fillna("")
 df_filtered["TRAVAUX SUPPLEMENTAIRES"] = df_filtered["TRAVAUX SUPPLEMENTAIRES"].fillna("")
 
-# Extraction des codes en séparant les mots (espaces, virgules...)
+# Séparation des codes (par espace ou virgule)
 fact_codes = df_filtered["FACTURATION"].astype(str).str.upper().str.split(r"[,\s]+")
 travaux_codes = df_filtered["TRAVAUX SUPPLEMENTAIRES"].astype(str).str.upper().str.split(r"[,\s]+")
 
-# Explosion ligne par ligne
+# Explosion des listes en lignes individuelles
 fact_exploded = fact_codes.explode()
 ts_exploded = travaux_codes.explode()
 
-# Concaténation + nettoyage des chaînes
+# Concaténation correcte
 all_codes = pd.concat([fact_exploded, ts_exploded])
 all_codes = all_codes.astype(str).str.strip()
-all_codes = all_codes[all_codes != ""]  # suppression des blancs
+all_codes = all_codes[all_codes != ""]  # Supprimer les vides
 
-# Comptage des occurrences de chaque code
+# Comptage des codes
 code_counts = all_codes.value_counts().sort_index()
-code_counts_df = pd.DataFrame(code_counts).T  # format horizontal (ligne unique)
+code_counts_df = pd.DataFrame(code_counts).T  # une seule ligne, comme dans ta capture
 code_counts_df.index = ["Nombre"]
 
-# Construction du tableau sombre avec AgGrid
+# Grille sombre AgGrid
 gb_codes = GridOptionsBuilder.from_dataframe(code_counts_df)
 gb_codes.configure_default_column(
     filter=True,
@@ -87,7 +87,6 @@ gb_codes.configure_default_column(
 )
 grid_options = gb_codes.build()
 
-# Affichage du tableau
 AgGrid(
     code_counts_df,
     gridOptions=grid_options,
