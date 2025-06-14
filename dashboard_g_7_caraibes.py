@@ -81,7 +81,7 @@ grid_options_codes = gb_codes.build()
 AgGrid(
     code_counts_df,
     gridOptions=grid_options_codes,
-    height=70,
+    height=90,
     fit_columns_on_grid_load=True,
     update_mode=GridUpdateMode.NO_UPDATE,
     theme="streamlit"
