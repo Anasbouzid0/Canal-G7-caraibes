@@ -117,7 +117,7 @@ def convertir_excel(df):
     output = BytesIO()
     with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
         df.to_excel(writer, index=False, sheet_name="Interventions")
-        writer.save()
+        
     return output.getvalue()
 
 fichier_excel = convertir_excel(df_affiche)
