@@ -41,27 +41,6 @@ kpi3.metric("OT OK / NOK", f"{int(ot_ok)} / {int(ot_nok)}")
 kpi4.metric("OT Reportés", int(ot_report))
 
 
-# === TAUX CALCULÉS DYNAMIQUEMENT ===
-st.subheader(" Taux de performance (%)")
-
-# Sécurité : éviter la division par zéro
-def safe_div(numerator, denominator):
-    return (numerator / denominator * 100) if denominator != 0 else 0.0
-
-# Calculs directs
-taux_reussite = safe_div(ot_ok, ot_real)
-taux_echec = safe_div(ot_nok, ot_real)
-taux_report = safe_div(ot_report, total_planifies)
-taux_cloture = safe_div(ot_real, total_planifies)
-
-# Affichage formaté
-col1, col2, col3, col4 = st.columns(4)
-col1.metric("% Réussite (OK)", f"{taux_reussite:.2f}%")
-col2.metric("% Échec (NOK)", f"{taux_echec:.2f}%")
-col3.metric("% Reportés", f"{taux_report:.2f}%")
-col4.metric("% Clôturés", f"{taux_cloture:.2f}%")
-
-
 
 # === GRAPHIQUE : OT Réalisés par jour avec jour du mois ===
 if 'Date' in df_filtered.columns and 'OT Réalisé' in df_filtered.columns:
@@ -141,13 +120,24 @@ st.download_button(
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 )
 
+# === TAUX CALCULÉS DYNAMIQUEMENT ===
+st.subheader(" Taux de performance (%)")
 
-# === TAUX DE RÉUSSITE ET ÉCHEC ===
-st.subheader(" Moyennes des taux")
+# Sécurité : éviter la division par zéro
+def safe_div(numerator, denominator):
+    return (numerator / denominator * 100) if denominator != 0 else 0.0
 
+# Calculs directs
+taux_reussite = safe_div(ot_ok, ot_real)
+taux_echec = safe_div(ot_nok, ot_real)
+taux_report = safe_div(ot_report, total_planifies)
+taux_cloture = safe_div(ot_real, total_planifies)
+
+# Affichage formaté
 col1, col2, col3, col4 = st.columns(4)
-col1.metric("% Réussite (OK)", f"{moy_taux_reussite:.2f}%")
-col2.metric("% Échec (NOK)", f"{moy_taux_echec:.2f}%")
-col3.metric("% Reportés", f"{moy_taux_report:.2f}%")
-col4.metric("% Clôturés", f"{moy_taux_cloture:.2f}%")
+col1.metric("% Réussite (OK)", f"{taux_reussite:.2f}%")
+col2.metric("% Échec (NOK)", f"{taux_echec:.2f}%")
+col3.metric("% Reportés", f"{taux_report:.2f}%")
+col4.metric("% Clôturés", f"{taux_cloture:.2f}%")
+
 
