@@ -13,12 +13,15 @@ if 'Nom technicien' in df.columns:
     df.rename(columns={"Nom technicien": "NOM"}, inplace=True)
 
 # === SUIVI DYNAMIQUE DES INTERVENTIONS ===
+
 st.subheader("Suivi des interventions")
 
-# Liste des techniciens avec "Tous"
-techniciens = df["NOM"].dropna().unique().tolist()
-techniciens.insert(0, "Tous")
-technicien_choisi = st.selectbox("Choisir un technicien", sorted(techniciens))
+# Liste des techniciens + "Tous" en premier
+techniciens = sorted(df["NOM"].dropna().unique().tolist())
+techniciens.insert(0, "Tous")  # Ajout au début de la liste
+
+# Sélecteur
+technicien_choisi = st.selectbox("Choisir un technicien", techniciens)
 
 # Filtrage dynamique
 df_filtered = df.copy() if technicien_choisi == "Tous" else df[df["NOM"] == technicien_choisi]
