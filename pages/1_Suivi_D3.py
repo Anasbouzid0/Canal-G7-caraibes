@@ -57,50 +57,38 @@ if 'Date' in df_filtered.columns and 'OT Réalisé' in df_filtered.columns:
 
     st.altair_chart(chart, use_container_width=True)
 
-# === TABLEAU DÉTAILLÉ ===
-
+from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode
 from io import BytesIO
 
 # === TABLEAU INTERACTIF FILTRÉ + EXPORT EXCEL ===
-st.subheader("Détails des interventions")
+st.subheader("📊 Détails des interventions")
 
-# Colonnes affichées dans le tableau
+# Colonnes à afficher
 colonnes_affichees = ["Date", "NOM", "État", "OT planifiés", "OT Réalisé", "OT OK", "OT NOK", "OT Reportes"]
 df_affiche = df_filtered[colonnes_affichees]
 
-# Construction de la grille AgGrid
+# Construction de la grille
 gb = GridOptionsBuilder.from_dataframe(df_affiche)
-gb.configure_default_column(filter=True, resizable=True, sortable=True)
-gb.configure_pagination(paginationAutoPageSize=True)
-gb.configure_grid_options(domLayout='normal')
-options = gb.build()
+gb.configure_default_column(filter=True, sortable=True, resizable=True)
+gb.configure_pagination()
+gb.configure_side_bar()
+grid_options = gb.build()
 
-# Thème sombre personnalisé
-st.markdown("""
-    <style>
-    .ag-theme-dark {
-        background-color: #1e1e1e !important;
-        color: #f0f0f0 !important;
-    }
-    .ag-theme-dark .ag-header-cell-label {
-        color: #ffffff !important;
-    }
-    .ag-theme-dark .ag-row, .ag-theme-dark .ag-cell {
-        background-color: #1e1e1e !important;
-        color: #f0f0f0 !important;
-    }
-    </style>
-""", unsafe_allow_html=True)
+# Zone de recherche
+search = st.text_input("🔍 Recherche dans le tableau")
+if search:
+    grid_options["quickFilterText"] = search
 
-# Affichage du tableau
+# ✅ Utilisation du thème sombre intégré d'AgGrid
 AgGrid(
     df_affiche,
-    gridOptions=options,
-    theme="dark",
+    gridOptions=grid_options,
+    height=420,
     fit_columns_on_grid_load=True,
     update_mode=GridUpdateMode.NO_UPDATE,
-    height=420
+    theme="balham-dark"  # ✅ thème sombre réel
 )
+
 # === BOUTON D'EXPORT EXCEL ===
 
 def convertir_excel(df):
