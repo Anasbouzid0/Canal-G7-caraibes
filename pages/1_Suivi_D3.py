@@ -61,7 +61,7 @@ from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode
 from io import BytesIO
 
 # === TABLEAU INTERACTIF FILTRÉ + EXPORT EXCEL ===
-st.subheader("Détails des interventions")
+st.subheader("Suivi JOURNALIER CANAL D3")
 
 # Colonnes à afficher
 colonnes_affichees = ["Date", "NOM", "État", "OT planifiés", "OT Réalisé", "OT OK", "OT NOK", "OT Reportes"]
