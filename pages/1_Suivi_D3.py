@@ -12,42 +12,31 @@ df = pd.read_excel("Canal inter.xlsx", sheet_name="SUIVI JOURNALIER CANAL")
 if 'Nom technicien' in df.columns:
     df.rename(columns={"Nom technicien": "NOM"}, inplace=True)
 
-# === KPIs dynamiques avec total global par défaut ===
+# === SUIVI DYNAMIQUE DES INTERVENTIONS ===
 
-# Titre principal
 st.subheader(" Suivi des interventions")
 
-# Préparer la liste des techniciens avec option "Tous"
-techniciens = df["NOM"].dropna().unique().tolist()
-techniciens.insert(0, "Tous")  # Ajouter l'option "Tous"
-
-# === Suivi dynamique des interventions ===
-st.subheader("📊 Suivi des interventions")
-
-# Liste des techniciens avec option "Tous"
+# Liste des techniciens avec "Tous"
 techniciens = df["NOM"].dropna().unique().tolist()
 techniciens.insert(0, "Tous")
-
-# Sélection du technicien
 technicien_choisi = st.selectbox("Choisir un technicien", sorted(techniciens))
 
 # Filtrage dynamique
 df_filtered = df.copy() if technicien_choisi == "Tous" else df[df["NOM"] == technicien_choisi]
 
-# Calculs
+# Calculs dynamiques
 total_planifies = df_filtered['OT planifiés'].sum()
 ot_real = df_filtered['OT Réalisé'].sum()
 ot_ok = df_filtered['OT OK'].sum()
 ot_nok = df_filtered['OT NOK'].sum()
 ot_report = df_filtered['OT Reportes'].sum()
 
-# Affichage dynamique — UNE seule barre
+# Affichage : UNE seule barre de KPI
 kpi1, kpi2, kpi3, kpi4 = st.columns(4)
 kpi1.metric("OT Planifiés", int(total_planifies))
 kpi2.metric("OT Réalisés", int(ot_real))
 kpi3.metric("OT OK / NOK", f"{int(ot_ok)} / {int(ot_nok)}")
 kpi4.metric("OT Reportés", int(ot_report))
-
 
 # === CALCULS MOYENNES DES TAUX ===
 taux_cols = ['Taux Réussite', 'Taux Echec', 'Taux Report', 'Taux Cloture']
