@@ -1,18 +1,8 @@
-# Streamlit pour l'interface web
-streamlit==1.33.0
+streamlit
+pandas
+openpyxl
+altair
+xlsxwriter
+streamlit-aggrid
+pillow
 
-# Manipulation des données
-pandas==2.2.2
-
-# Visualisation (ligne, courbes, etc.)
-altair==5.3.0
-
-# Export Excel
-xlsxwriter==3.2.0
-openpyxl==3.1.2
-
-# Tableaux dynamiques
-streamlit-aggrid==0.3.3
-
-# Moteur Excel avec Pandas
-pyxlsb==1.0.10
