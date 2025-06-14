@@ -16,13 +16,16 @@ if 'Nom technicien' in df.columns:
 
 st.subheader(" Suivi des interventions")
 
-# Liste des techniciens avec "All"
-techniciens = df["NOM"].dropna().unique().tolist()
-techniciens.insert(0, "All")
-technicien_choisi = st.selectbox("Choisir un technicien", sorted(techniciens))
+# Liste des techniciens + "Tous" en premier
+techniciens = sorted(df["NOM"].dropna().unique().tolist())
+techniciens.insert(0, "Tous")  # Ajout au début de la liste
+
+# Sélecteur
+technicien_choisi = st.selectbox("Choisir un technicien", techniciens)
+
 
 # Filtrage dynamique
-df_filtered = df.copy() if technicien_choisi == "All" else df[df["NOM"] == technicien_choisi]
+df_filtered = df.copy() if technicien_choisi == "Tous" else df[df["NOM"] == technicien_choisi]
 
 # Calculs dynamiques
 total_planifies = df_filtered['OT planifiés'].sum()
