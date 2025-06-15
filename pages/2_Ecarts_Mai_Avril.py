@@ -7,7 +7,7 @@ from io import BytesIO
 
 st.set_page_config(page_title="Suivi des Écarts de Performance", layout="wide")
 
-st.title("📈 Tableau de Bord - Suivi des Écarts de Performance (Mai vs Avril)")
+st.title("📊 Analyse Comparative des Performances : Mai vs Avril")
 
 # === Chargement des données ===
 file_path = "Ecart.xlsx"
@@ -38,9 +38,10 @@ ecarts_avr = ((mai - avril) / avril.replace(0, pd.NA)) * 100
 ecarts_avr = ecarts_avr.clip(lower=-100, upper=100).round(2)
 ecarts_avr.loc["MOYENNE"] = ecarts_avr.mean()
 
-# === Filtres dynamiques ===
-st.sidebar.header("🎛️ Sélection de vue")
-mode_vue = st.sidebar.radio("Comparer :", ["Vue Globale (Moyenne)", "Vue par Semaine"])
+# === Filtres dynamiques intégrés à la page ===
+with st.container():
+    st.markdown("## 🎛️ Sélection de la Vue")
+    mode_vue = st.radio("Comparer :", ["Vue Globale (Moyenne)", "Vue par Semaine"], horizontal=True)
 
 # === Affichage Tableau ===
 st.header("📋 Synthèse des Écarts - Mois de Mai comparé à Avril")
@@ -58,40 +59,43 @@ def afficher_graphique(df, indicateurs, titre):
 
     if mode_vue == "Vue Globale (Moyenne)":
         chart = alt.Chart(moyenne).mark_bar(size=40).encode(
-            x=alt.X("Indicateur:N", title="Indicateur"),
+            x=alt.X("Indicateur:N", title=titre),
             y=alt.Y("Écart (%):Q", scale=alt.Scale(domain=[-100, 100])),
             color=alt.condition("datum['Écart (%)'] > 0", alt.value("green"), alt.value("red")),
             tooltip=["Indicateur", "Écart (%)"]
-        ).properties(width=900, height=300, title=f"Écarts moyens - {titre}")
+        ).properties(width=900, height=300, title=f"Variation Moyenne - {titre}")
         st.altair_chart(chart, use_container_width=True)
 
     else:
         ligne = alt.Chart(long_df).mark_line(point=True).encode(
-            x="Semaine:N",
+            x=alt.X("Semaine:N", title="Semaine"),
             y=alt.Y("Écart (%):Q", scale=alt.Scale(domain=[-100, 100])),
-            color="Indicateur",
+            color=alt.Color("Indicateur:N", legend=alt.Legend(title=titre)),
             tooltip=["Semaine", "Indicateur", "Écart (%)"]
-        ).properties(width=900, height=400, title=f"Tendance hebdomadaire - {titre}")
+        ).properties(width=900, height=400, title=f"Évolution Hebdomadaire - {titre}")
 
         st.altair_chart(ligne, use_container_width=True)
 
 # === Affichage des sections ===
-st.subheader("📌 Indicateurs Opérationnels : OK / NOK / Reportés")
+st.subheader("📌 Indicateurs d’Activité : OK / NOK / Reportés")
 action_cols = ["Ok", "Nok", "Reportés"]
-afficher_graphique(ecarts_avr, action_cols, "Indicateurs Opérationnels")
+afficher_graphique(ecarts_avr, action_cols, "Écart % Activité (Mai/Avril)")
 
 st.subheader("📌 Indicateurs Financiers : Montants")
 montant_cols = ["Montant prévu", "Montant réel", "Montant echec"]
-afficher_graphique(ecarts_avr, montant_cols, "Montants")
+labels_abbr = {"Montant prévu": "M. Prévu", "Montant réel": "M. Réel", "Montant echec": "M. Échec"}
+ecarts_avr = ecarts_avr.rename(columns=labels_abbr)
+montant_abbr_cols = list(labels_abbr.values())
+afficher_graphique(ecarts_avr, montant_abbr_cols, "Écart % Financier (Mai/Avril)")
 
 st.subheader("📌 Indicateurs de Performance : Taux")
 taux_cols = ["Taux Réussite", "Taux Echec", "Taux Report", "Taux Cloture"]
-afficher_graphique(ecarts_avr, taux_cols, "Taux de Performance")
+afficher_graphique(ecarts_avr, taux_cols, "Écart % Taux de Performance (Mai/Avril)")
 
 # === Export ===
 buffer = BytesIO()
 with pd.ExcelWriter(buffer, engine="xlsxwriter") as writer:
     ecarts_avr.to_excel(writer, sheet_name="Écarts Mai-Avril")
-st.download_button("📥 Télécharger les données d’écarts (Excel)", buffer.getvalue(), file_name="ecarts_mai_avril.xlsx")
+st.download_button("📥 Télécharger les Données (Excel)", buffer.getvalue(), file_name="ecarts_mai_avril.xlsx")
 
-st.success("✔️ Rapport de comparaison mensuelle généré avec succès")
+st.success("✔️ Rapport comparatif généré avec succès")
