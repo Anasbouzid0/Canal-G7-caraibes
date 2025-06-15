@@ -86,18 +86,18 @@ def afficher_graphique(df, indicateurs, titre):
 # === Affichage des sections ===
 st.subheader("Indicateurs d’Activité : OK / NOK / Reportés")
 action_cols = ["Ok", "Nok", "Reportés"]
-afficher_graphique(ecarts_avr, action_cols, "Écart % Activité (Mai/Avril)")
+afficher_graphique(ecarts_avr, action_cols, "Écart Activité (Mai/Avril)")
 
 st.subheader("Indicateurs Financiers : Montants")
 montant_cols = ["Montant prévu", "Montant réel", "Montant echec"]
 labels_abbr = {"Montant prévu": "M. Prévu", "Montant réel": "M. Réel", "Montant echec": "M. Échec"}
 ecarts_avr = ecarts_avr.rename(columns=labels_abbr)
 montant_abbr_cols = list(labels_abbr.values())
-afficher_graphique(ecarts_avr, montant_abbr_cols, "Écart % Financier (Mai/Avril)")
+afficher_graphique(ecarts_avr, montant_abbr_cols, "Écart Financier (Mai/Avril)")
 
 st.subheader("Indicateurs de Performance : Taux")
 taux_cols = ["Taux Réussite", "Taux Echec", "Taux Report", "Taux Cloture"]
-afficher_graphique(ecarts_avr, taux_cols, "Écart % Taux de Performance (Mai/Avril)")
+afficher_graphique(ecarts_avr, taux_cols, "Écart Taux de Performance (Mai/Avril)")
 
 # === Export ===
 buffer = BytesIO()
@@ -105,4 +105,3 @@ with pd.ExcelWriter(buffer, engine="xlsxwriter") as writer:
     ecarts_avr.to_excel(writer, sheet_name="Écarts Mai-Avril")
 st.download_button("Télécharger les Données (Excel)", buffer.getvalue(), file_name="ecarts_mai_avril.xlsx")
 
-st.success("Rapport comparatif généré avec succès")
