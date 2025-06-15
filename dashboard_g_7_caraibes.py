@@ -110,10 +110,10 @@ AgGrid(df_filtered, gridOptions=grid_options, height=350)
 
 # === EXPORT CSV ===
 csv = df_filtered.to_csv(index=False).encode('utf-8')
-st.download_button("📅 Télécharger CSV", csv, file_name="G7_data.csv", mime="text/csv")
+st.download_button("Télécharger CSV", csv, file_name="G7_data.csv", mime="text/csv")
 
 # === EXPORT EXCEL ===
 buffer = BytesIO()
 with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
     df_filtered.to_excel(writer, index=False, sheet_name="Feuille1")
-st.download_button("📅 Télécharger Excel", buffer.getvalue(), file_name="G7_data.xlsx", mime="application/vnd.ms-excel")
+st.download_button("Télécharger Excel", buffer.getvalue(), file_name="G7_data.xlsx", mime="application/vnd.ms-excel")
