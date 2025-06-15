@@ -38,10 +38,17 @@ ecarts_avr = ((mai - avril) / avril.replace(0, pd.NA)) * 100
 ecarts_avr = ecarts_avr.clip(lower=-100, upper=100).round(2)
 ecarts_avr.loc["MOYENNE"] = ecarts_avr.mean()
 
+# Moyenne générale (tout indicateur, tout confondu)
+moyenne_generale = ecarts_avr.drop(index="MOYENNE").mean().mean().round(2)
+
 # === Filtres dynamiques intégrés à la page ===
 with st.container():
     st.markdown("## 🎛️ Sélection de la Vue")
-    mode_vue = st.radio("Comparer :", ["Vue Globale (Moyenne)", "Vue par Semaine"], horizontal=True)
+    col1, col2 = st.columns([2, 1])
+    with col1:
+        mode_vue = st.radio("Comparer :", ["Vue Globale (Moyenne)", "Vue par Semaine"], horizontal=True)
+    with col2:
+        st.metric(label="📈 Moyenne Générale des Écarts Mai/Avril", value=f"{moyenne_generale}%")
 
 # === Affichage Tableau ===
 st.header("📋 Synthèse des Écarts - Mois de Mai comparé à Avril")
