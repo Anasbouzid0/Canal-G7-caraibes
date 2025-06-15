@@ -83,7 +83,7 @@ def afficher_graphique(df, indicateurs, titre):
 
     if mode_vue == "Vue Globale (Moyenne)":
         chart = alt.Chart(moyenne).mark_bar(size=40).encode(
-            x=alt.X("Indicateur:N", title=titre),
+            x=alt.X("Indicateur:N", title=f"{titre} — Écart (%)"),
             y=alt.Y("Écart (%):Q", scale=alt.Scale(domain=[-100, 100])),
             color=alt.condition("datum['Écart (%)'] > 0", alt.value("green"), alt.value("red")),
             tooltip=["Indicateur", "Écart (%)"]
@@ -94,7 +94,7 @@ def afficher_graphique(df, indicateurs, titre):
         ligne = alt.Chart(long_df).mark_line(point=True).encode(
             x=alt.X("Semaine:N", title="Semaine"),
             y=alt.Y("Écart (%):Q", scale=alt.Scale(domain=[-100, 100])),
-            color=alt.Color("Indicateur:N", legend=alt.Legend(title=titre)),
+            color=alt.Color("Indicateur:N", legend=alt.Legend(title=f"{titre} — Écart (%)")),
             tooltip=["Semaine", "Indicateur", "Écart (%)"]
         ).properties(width=900, height=400, title=f"Évolution Hebdomadaire - {titre}")
 
@@ -103,17 +103,17 @@ def afficher_graphique(df, indicateurs, titre):
 # === Affichage des sections ===
 st.subheader("Indicateurs d’Activité : OK / NOK / Reportés")
 action_cols = ["Ok", "Nok", "Reportés"]
-afficher_graphique(ecarts_avr, action_cols, "Écart % Activité (Mai/Avril)")
+afficher_graphique(ecarts_avr, action_cols, "Activité (Mai/Avril)")
 
 st.subheader("Indicateurs Financiers : Montants")
 labels_abbr = {"Montant prévu": "M. Prévu", "Montant réel": "M. Réel", "Montant echec": "M. Échec"}
 ecarts_avr = ecarts_avr.rename(columns=labels_abbr)
 montant_abbr_cols = list(labels_abbr.values())
-afficher_graphique(ecarts_avr, montant_abbr_cols, "Écart % Financier (Mai/Avril)")
+afficher_graphique(ecarts_avr, montant_abbr_cols, "Financier (Mai/Avril)")
 
 st.subheader("Indicateurs de Performance : Taux")
 taux_cols = ["Taux Réussite", "Taux Echec", "Taux Report", "Taux Cloture"]
-afficher_graphique(ecarts_avr, taux_cols, "Écart % Taux de Performance (Mai/Avril)")
+afficher_graphique(ecarts_avr, taux_cols, "Taux de Performance (Mai/Avril)")
 
 # === Export ===
 buffer = BytesIO()
