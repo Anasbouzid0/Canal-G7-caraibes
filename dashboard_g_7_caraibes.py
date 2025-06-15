@@ -1,12 +1,9 @@
 import streamlit as st
-from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode
 import pandas as pd
 import altair as alt
 from io import BytesIO
-from PIL import Image
 
-
-st.set_page_config(page_title="Dashboard G7 Caraïbes", layout="wide")
+st.set_page_config(page_title="Dashboard G7 Caraïbes", layout="centered")
 
 # === CHARGEMENT DES DONNÉES ===
 df = pd.read_excel("Canal Mai.xlsx")
@@ -35,13 +32,13 @@ chart1 = alt.Chart(grouped).mark_bar(color="#318C6A").encode(
     x=alt.X("TECHNICIEN", sort=None),
     y=alt.Y("STT"),
     tooltip=["TECHNICIEN", "STT"]
-).properties(title="Montant STT par Technicien", width=400, height=300)
+).properties(title="Montant STT par Technicien", height=300)
 
 chart2 = alt.Chart(grouped).mark_bar(color="#F9E266").encode(
     x=alt.X("TECHNICIEN", sort=None),
     y=alt.Y("RefCount"),
     tooltip=["TECHNICIEN", "RefCount"]
-).properties(title="Références PXO par Technicien", width=400, height=300)
+).properties(title="Références PXO par Technicien", height=300)
 
 ch1, ch2 = st.columns(2)
 ch1.altair_chart(chart1, use_container_width=True)
@@ -65,22 +62,11 @@ code_counts = all_codes.value_counts().sort_index()
 code_counts_df = pd.DataFrame(code_counts).T
 code_counts_df.index = ["Nombre"]
 
-# === TABLEAU AgGrid ===
-gb_codes = GridOptionsBuilder.from_dataframe(code_counts_df)
-gb_codes.configure_default_column(filter=True, sortable=True, resizable=True, cellStyle={"textAlign": "center"})
-gb_codes.configure_pagination()
-grid_options_codes = gb_codes.build()
+# === AFFICHAGE DU TABLEAU (COMPATIBLE MOBILE) ===
+with st.expander("Afficher la répartition des codes"):
+    st.dataframe(code_counts_df.T.reset_index().rename(columns={"index": "Code"}), use_container_width=True)
 
-AgGrid(
-    code_counts_df,
-    gridOptions=grid_options_codes,
-    height=100,
-    fit_columns_on_grid_load=True,
-    update_mode=GridUpdateMode.NO_UPDATE,
-    theme="streamlit"
-)
-
-# === GRAPHIQUE 1 : Barres verticales (nombre d'occurrences) ===
+# === GRAPHIQUE DES CODES ===
 st.subheader("Répartition des codes – Nombre d’occurrences")
 code_counts_long = code_counts.reset_index()
 code_counts_long.columns = ["Code", "Nombre"]
@@ -89,24 +75,14 @@ chart_counts = alt.Chart(code_counts_long).mark_bar(size=30).encode(
     x=alt.X("Code:N", sort='-y', title="Code"),
     y=alt.Y("Nombre:Q", title="Nombre d'occurrences"),
     tooltip=["Code", "Nombre"]
-).properties(width=700, height=400)
+).properties(height=400)
 
 st.altair_chart(chart_counts, use_container_width=True)
 
-
 # === TABLEAU PRINCIPAL ===
 st.subheader("Détails des interventions")
-gb = GridOptionsBuilder.from_dataframe(df_filtered)
-gb.configure_default_column(filter=True, sortable=True)
-gb.configure_pagination()
-gb.configure_side_bar()
-grid_options = gb.build()
-
-search = st.text_input("🔍 Recherche dans le tableau")
-if search:
-    grid_options["quickFilterText"] = search
-
-AgGrid(df_filtered, gridOptions=grid_options, height=350)
+with st.expander("Afficher le tableau détaillé"):
+    st.dataframe(df_filtered, use_container_width=True)
 
 # === EXPORT CSV ===
 csv = df_filtered.to_csv(index=False).encode('utf-8')
