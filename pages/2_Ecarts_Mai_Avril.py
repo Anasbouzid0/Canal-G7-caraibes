@@ -7,7 +7,7 @@ from io import BytesIO
 
 st.set_page_config(page_title="Suivi des Écarts de Performance", layout="wide")
 
-st.title("📊 Analyse Comparative des Performances : Mai vs Avril")
+st.title("Analyse Comparative des Performances : Mai vs Avril")
 
 # === Chargement des données ===
 file_path = "Ecart.xlsx"
@@ -43,15 +43,15 @@ moyenne_generale = ecarts_avr.drop(index="MOYENNE").mean().mean().round(2)
 
 # === Filtres dynamiques intégrés à la page ===
 with st.container():
-    st.markdown("## 🎛️ Sélection de la Vue")
+    st.markdown("## Sélection de la Vue")
     col1, col2 = st.columns([2, 1])
     with col1:
         mode_vue = st.radio("Comparer :", ["Vue Globale (Moyenne)", "Vue par Semaine"], horizontal=True)
     with col2:
-        st.metric(label="📈 Moyenne Générale des Écarts Mai/Avril", value=f"{moyenne_generale}%")
+        st.metric(label="Moyenne Générale des Écarts Mai/Avril", value=f"{moyenne_generale}%")
 
 # === Affichage Tableau ===
-st.header("📋 Synthèse des Écarts - Mois de Mai comparé à Avril")
+st.header("Synthèse des Écarts - Mois de Mai comparé à Avril")
 gb1 = GridOptionsBuilder.from_dataframe(ecarts_avr.reset_index())
 gb1.configure_default_column(resizable=True, filter=True, sortable=True)
 gb1.configure_pagination()
@@ -84,18 +84,18 @@ def afficher_graphique(df, indicateurs, titre):
         st.altair_chart(ligne, use_container_width=True)
 
 # === Affichage des sections ===
-st.subheader("📌 Indicateurs d’Activité : OK / NOK / Reportés")
+st.subheader("Indicateurs d’Activité : OK / NOK / Reportés")
 action_cols = ["Ok", "Nok", "Reportés"]
 afficher_graphique(ecarts_avr, action_cols, "Écart % Activité (Mai/Avril)")
 
-st.subheader("📌 Indicateurs Financiers : Montants")
+st.subheader("Indicateurs Financiers : Montants")
 montant_cols = ["Montant prévu", "Montant réel", "Montant echec"]
 labels_abbr = {"Montant prévu": "M. Prévu", "Montant réel": "M. Réel", "Montant echec": "M. Échec"}
 ecarts_avr = ecarts_avr.rename(columns=labels_abbr)
 montant_abbr_cols = list(labels_abbr.values())
 afficher_graphique(ecarts_avr, montant_abbr_cols, "Écart % Financier (Mai/Avril)")
 
-st.subheader("📌 Indicateurs de Performance : Taux")
+st.subheader("Indicateurs de Performance : Taux")
 taux_cols = ["Taux Réussite", "Taux Echec", "Taux Report", "Taux Cloture"]
 afficher_graphique(ecarts_avr, taux_cols, "Écart % Taux de Performance (Mai/Avril)")
 
@@ -103,6 +103,6 @@ afficher_graphique(ecarts_avr, taux_cols, "Écart % Taux de Performance (Mai/Avr
 buffer = BytesIO()
 with pd.ExcelWriter(buffer, engine="xlsxwriter") as writer:
     ecarts_avr.to_excel(writer, sheet_name="Écarts Mai-Avril")
-st.download_button("📥 Télécharger les Données (Excel)", buffer.getvalue(), file_name="ecarts_mai_avril.xlsx")
+st.download_button("Télécharger les Données (Excel)", buffer.getvalue(), file_name="ecarts_mai_avril.xlsx")
 
-st.success("✔️ Rapport comparatif généré avec succès")
+st.success("Rapport comparatif généré avec succès")
