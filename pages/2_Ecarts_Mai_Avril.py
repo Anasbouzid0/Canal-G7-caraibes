@@ -3,10 +3,11 @@ import streamlit as st
 import pandas as pd
 import altair as alt
 from st_aggrid import AgGrid, GridOptionsBuilder
+from io import BytesIO
 
-st.set_page_config(page_title="Écarts Mai / Avril", layout="wide")
+st.set_page_config(page_title="Suivi des Écarts de Performance", layout="wide")
 
-st.title("📊 Analyse des Écarts Hebdomadaires : Mai vs Avril")
+st.title("📈 Tableau de Bord - Suivi des Écarts de Performance (Mai vs Avril)")
 
 # === Chargement des données ===
 file_path = "Ecart.xlsx"
@@ -23,82 +24,66 @@ cols_to_compare = [
     "Taux Réussite", "Taux Echec", "Taux Report", "Taux Cloture",
     "Montant prévu", "Montant réel", "Montant echec"
 ]
-df_mai.columns = df_mai.columns.str.strip()
-df_avril.columns = df_avril.columns.str.strip()
+
+for df in [df_mai, df_avril]:
+    df.columns = df.columns.str.strip()
 
 # Extraction et alignement
 mai = df_mai[["Semaine"] + cols_to_compare].set_index("Semaine")
 avril = df_avril[["Semaine"] + cols_to_compare].set_index("Semaine")
-avril = avril.loc[mai.index]  # Réalignement
+avril = avril.loc[mai.index]
 
-# Calcul des écarts en pourcentage avec traitement des 0 et limite [-100%, +100%]
-ecarts = ((mai - avril) / avril.replace(0, pd.NA)) * 100
-ecarts = ecarts.clip(lower=-100, upper=100).round(2)
-ecarts.loc["MOYENNE"] = ecarts.mean()
+# Calcul des écarts MAI vs AVRIL
+ecarts_avr = ((mai - avril) / avril.replace(0, pd.NA)) * 100
+ecarts_avr = ecarts_avr.clip(lower=-100, upper=100).round(2)
+ecarts_avr.loc["MOYENNE"] = ecarts_avr.mean()
 
-# === Affichage tableau interactif ===
-st.subheader("🧾 Tableau des écarts en pourcentage")
-gb = GridOptionsBuilder.from_dataframe(ecarts.reset_index())
-gb.configure_default_column(resizable=True, filter=True, sortable=True)
-gb.configure_pagination()
-grid_options = gb.build()
-AgGrid(ecarts.reset_index(), gridOptions=grid_options, height=450, fit_columns_on_grid_load=True)
+st.header("📋 Synthèse des Écarts - Mois de Mai comparé à Avril")
+gb1 = GridOptionsBuilder.from_dataframe(ecarts_avr.reset_index())
+gb1.configure_default_column(resizable=True, filter=True, sortable=True)
+gb1.configure_pagination()
+AgGrid(ecarts_avr.reset_index(), gridOptions=gb1.build(), height=300)
 
-# === Graphique 1 : OK / NOK / Reportés ===
-st.subheader("✅ Évolution des écarts : OK / NOK / Reportés")
-indicateurs_actions = ["Ok", "Nok", "Reportés"]
-long_action = ecarts.drop(index="MOYENNE")[indicateurs_actions].reset_index().melt(id_vars="Semaine", var_name="Indicateur", value_name="Écart (%)")
-chart_action = alt.Chart(long_action).mark_line(point=True).encode(
-    x="Semaine:N",
-    y=alt.Y("Écart (%):Q", scale=alt.Scale(domain=[-100, 100])),
-    color="Indicateur",
-    tooltip=["Semaine", "Indicateur", "Écart (%)"]
-).properties(width=900, height=400)
-st.altair_chart(chart_action, use_container_width=True)
+# === Graphiques dynamiques avec barres d'évolution ===
 
-# === Graphique 2 : Montants ===
-st.subheader("💶 Évolution des écarts : Montants")
-indicateurs_montant = ["Montant prévu", "Montant réel", "Montant echec"]
-long_montant = ecarts.drop(index="MOYENNE")[indicateurs_montant].reset_index().melt(id_vars="Semaine", var_name="Indicateur", value_name="Écart (%)")
-chart_montant = alt.Chart(long_montant).mark_line(point=True).encode(
-    x="Semaine:N",
-    y=alt.Y("Écart (%):Q", scale=alt.Scale(domain=[-100, 100])),
-    color="Indicateur",
-    tooltip=["Semaine", "Indicateur", "Écart (%)"]
-).properties(width=900, height=400)
-st.altair_chart(chart_montant, use_container_width=True)
+def afficher_graphique(df, indicateurs, titre):
+    df_no_avg = df.drop(index="MOYENNE")
+    long_df = df_no_avg[indicateurs].reset_index().melt(id_vars="Semaine", var_name="Indicateur", value_name="Écart (%)")
+    moyenne = df.loc["MOYENNE", indicateurs].reset_index()
+    moyenne.columns = ["Indicateur", "Écart (%)"]
 
-# === Graphique 3 : Taux ===
-st.subheader("📊 Évolution des écarts : Taux")
-indicateurs_taux = ["Taux Réussite", "Taux Echec", "Taux Report", "Taux Cloture"]
-long_taux = ecarts.drop(index="MOYENNE")[indicateurs_taux].reset_index().melt(id_vars="Semaine", var_name="Indicateur", value_name="Écart (%)")
-chart_taux = alt.Chart(long_taux).mark_line(point=True).encode(
-    x="Semaine:N",
-    y=alt.Y("Écart (%):Q", scale=alt.Scale(domain=[-100, 100])),
-    color="Indicateur",
-    tooltip=["Semaine", "Indicateur", "Écart (%)"]
-).properties(width=900, height=400)
-st.altair_chart(chart_taux, use_container_width=True)
+    barre = alt.Chart(moyenne).mark_bar().encode(
+        x=alt.X("Indicateur:N", title="Indicateur"),
+        y=alt.Y("Écart (%):Q", scale=alt.Scale(domain=[-100, 100])),
+        color=alt.condition("datum['Écart (%)'] > 0", alt.value("green"), alt.value("red")),
+        tooltip=["Indicateur", "Écart (%)"]
+    ).properties(width=900, height=120, title="Synthèse moyenne des écarts (%)")
 
-# === Export CSV ===
-st.download_button(
-    "📥 Télécharger les écarts (CSV)",
-    ecarts.reset_index().to_csv(index=False).encode("utf-8"),
-    file_name="ecarts_mai_avril.csv",
-    mime="text/csv"
-)
+    ligne = alt.Chart(long_df).mark_line(point=True).encode(
+        x="Semaine:N",
+        y=alt.Y("Écart (%):Q", scale=alt.Scale(domain=[-100, 100])),
+        color="Indicateur",
+        tooltip=["Semaine", "Indicateur", "Écart (%)"]
+    ).properties(width=900, height=400, title=titre)
 
-# === Export Excel ===
-from io import BytesIO
+    st.altair_chart(barre & ligne, use_container_width=True)
+
+st.subheader("📌 Indicateurs Opérationnels : OK / NOK / Reportés")
+action_cols = ["Ok", "Nok", "Reportés"]
+afficher_graphique(ecarts_avr, action_cols, "Tendance hebdomadaire des indicateurs opérationnels")
+
+st.subheader("📌 Indicateurs Financiers : Montants")
+montant_cols = ["Montant prévu", "Montant réel", "Montant echec"]
+afficher_graphique(ecarts_avr, montant_cols, "Tendance hebdomadaire des montants")
+
+st.subheader("📌 Indicateurs de Performance : Taux")
+taux_cols = ["Taux Réussite", "Taux Echec", "Taux Report", "Taux Cloture"]
+afficher_graphique(ecarts_avr, taux_cols, "Tendance hebdomadaire des taux de performance")
+
+# === Export ===
 buffer = BytesIO()
 with pd.ExcelWriter(buffer, engine="xlsxwriter") as writer:
-    ecarts.to_excel(writer, index=True, sheet_name="Écarts")
-st.download_button(
-    "📥 Télécharger les écarts (Excel)",
-    buffer.getvalue(),
-    file_name="ecarts_mai_avril.xlsx",
-    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-)
+    ecarts_avr.to_excel(writer, sheet_name="Écarts Mai-Avril")
+st.download_button("📥 Télécharger les données d’écarts (Excel)", buffer.getvalue(), file_name="ecarts_mai_avril.xlsx")
 
-# === Fin de page ===
-st.success("Analyse complète générée avec succès ✅")
+st.success("✔️ Rapport de comparaison mensuelle généré avec succès")
