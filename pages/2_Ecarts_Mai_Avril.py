@@ -44,36 +44,41 @@ gb.configure_pagination()
 grid_options = gb.build()
 AgGrid(ecarts.reset_index(), gridOptions=grid_options, height=450, fit_columns_on_grid_load=True)
 
-# === Choix du graphique ===
-st.subheader("📈 Graphiques dynamiques des écarts")
-mode = st.radio("Choisir l'analyse graphique", ["Écarts par indicateur (hebdo)", "Écarts par semaine (indicateurs cumulés)"])
+# === Graphique 1 : OK / NOK / Reportés ===
+st.subheader("✅ Évolution des écarts : OK / NOK / Reportés")
+indicateurs_actions = ["Ok", "Nok", "Reportés"]
+long_action = ecarts.drop(index="MOYENNE")[indicateurs_actions].reset_index().melt(id_vars="Semaine", var_name="Indicateur", value_name="Écart (%)")
+chart_action = alt.Chart(long_action).mark_line(point=True).encode(
+    x="Semaine:N",
+    y=alt.Y("Écart (%):Q", scale=alt.Scale(domain=[-100, 100])),
+    color="Indicateur",
+    tooltip=["Semaine", "Indicateur", "Écart (%)"]
+).properties(width=900, height=400)
+st.altair_chart(chart_action, use_container_width=True)
 
-# Préparation des données
-if mode == "Écarts par indicateur (hebdo)":
-    long_df = ecarts.drop(index="MOYENNE").reset_index().melt(id_vars="Semaine", var_name="Indicateur", value_name="Écart (%)")
-    chart = alt.Chart(long_df).mark_line(point=True).encode(
-        x=alt.X("Semaine:N", title="Semaine"),
-        y=alt.Y("Écart (%):Q", scale=alt.Scale(domain=[-100, 100])),
-        color="Indicateur:N",
-        tooltip=["Semaine", "Indicateur", "Écart (%)"]
-    ).properties(width=900, height=450)
-    st.altair_chart(chart, use_container_width=True)
+# === Graphique 2 : Montants ===
+st.subheader("💶 Évolution des écarts : Montants")
+indicateurs_montant = ["Montant prévu", "Montant réel", "Montant echec"]
+long_montant = ecarts.drop(index="MOYENNE")[indicateurs_montant].reset_index().melt(id_vars="Semaine", var_name="Indicateur", value_name="Écart (%)")
+chart_montant = alt.Chart(long_montant).mark_line(point=True).encode(
+    x="Semaine:N",
+    y=alt.Y("Écart (%):Q", scale=alt.Scale(domain=[-100, 100])),
+    color="Indicateur",
+    tooltip=["Semaine", "Indicateur", "Écart (%)"]
+).properties(width=900, height=400)
+st.altair_chart(chart_montant, use_container_width=True)
 
-elif mode == "Écarts par semaine (indicateurs cumulés)":
-    df_sum_mai = mai.sum().to_frame(name="Mai")
-    df_sum_avril = avril.sum().to_frame(name="Avril")
-    df_total = df_sum_mai.join(df_sum_avril)
-    df_total["Écart (%)"] = ((df_total["Mai"] - df_total["Avril"]) / df_total["Avril"].replace(0, pd.NA)) * 100
-    df_total["Écart (%)"] = df_total["Écart (%)"].clip(-100, 100).round(2)
-    df_total = df_total.reset_index().rename(columns={"index": "Indicateur"})
-
-    bar_chart = alt.Chart(df_total).mark_bar().encode(
-        x=alt.X("Indicateur:N", sort='-y'),
-        y=alt.Y("Écart (%):Q", scale=alt.Scale(domain=[-100, 100])),
-        color=alt.condition("datum['Écart (%)'] > 0", alt.value("green"), alt.value("red")),
-        tooltip=["Indicateur", "Écart (%)"]
-    ).properties(width=900, height=450)
-    st.altair_chart(bar_chart, use_container_width=True)
+# === Graphique 3 : Taux ===
+st.subheader("📊 Évolution des écarts : Taux")
+indicateurs_taux = ["Taux Réussite", "Taux Echec", "Taux Report", "Taux Cloture"]
+long_taux = ecarts.drop(index="MOYENNE")[indicateurs_taux].reset_index().melt(id_vars="Semaine", var_name="Indicateur", value_name="Écart (%)")
+chart_taux = alt.Chart(long_taux).mark_line(point=True).encode(
+    x="Semaine:N",
+    y=alt.Y("Écart (%):Q", scale=alt.Scale(domain=[-100, 100])),
+    color="Indicateur",
+    tooltip=["Semaine", "Indicateur", "Écart (%)"]
+).properties(width=900, height=400)
+st.altair_chart(chart_taux, use_container_width=True)
 
 # === Export CSV ===
 st.download_button(
