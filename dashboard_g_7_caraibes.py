@@ -3,8 +3,8 @@ import pandas as pd
 import altair as alt
 from io import BytesIO
 
-st.set_page_config(page_title="Dashboard G7 Caraïbes", layout="centered")
-
+st.set_page_config(page_title="CANAL G7 Caraïbes", layout="centered")
+st.markdown("<h1 style='text-align: center; color: #0C2340;'> CANAL G7 Caraïbes – Tableau de Bord Interactif</h1>", unsafe_allow_html=True)
 # === CHARGEMENT DES DONNÉES ===
 df = pd.read_excel("Canal Mai.xlsx")
 
