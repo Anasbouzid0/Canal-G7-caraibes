@@ -38,6 +38,11 @@ ecarts_avr = ((mai - avril) / avril.replace(0, pd.NA)) * 100
 ecarts_avr = ecarts_avr.clip(lower=-100, upper=100).round(2)
 ecarts_avr.loc["MOYENNE"] = ecarts_avr.mean()
 
+# === Filtres dynamiques ===
+st.sidebar.header("🎛️ Sélection de vue")
+mode_vue = st.sidebar.radio("Comparer :", ["Vue Globale (Moyenne)", "Vue par Semaine"])
+
+# === Affichage Tableau ===
 st.header("📋 Synthèse des Écarts - Mois de Mai comparé à Avril")
 gb1 = GridOptionsBuilder.from_dataframe(ecarts_avr.reset_index())
 gb1.configure_default_column(resizable=True, filter=True, sortable=True)
@@ -45,40 +50,43 @@ gb1.configure_pagination()
 AgGrid(ecarts_avr.reset_index(), gridOptions=gb1.build(), height=300)
 
 # === Graphiques dynamiques avec barres d'évolution ===
-
 def afficher_graphique(df, indicateurs, titre):
     df_no_avg = df.drop(index="MOYENNE")
     long_df = df_no_avg[indicateurs].reset_index().melt(id_vars="Semaine", var_name="Indicateur", value_name="Écart (%)")
     moyenne = df.loc["MOYENNE", indicateurs].reset_index()
     moyenne.columns = ["Indicateur", "Écart (%)"]
 
-    barre = alt.Chart(moyenne).mark_bar().encode(
-        x=alt.X("Indicateur:N", title="Indicateur"),
-        y=alt.Y("Écart (%):Q", scale=alt.Scale(domain=[-100, 100])),
-        color=alt.condition("datum['Écart (%)'] > 0", alt.value("green"), alt.value("red")),
-        tooltip=["Indicateur", "Écart (%)"]
-    ).properties(width=900, height=120, title="Synthèse moyenne des écarts (%)")
+    if mode_vue == "Vue Globale (Moyenne)":
+        chart = alt.Chart(moyenne).mark_bar(size=40).encode(
+            x=alt.X("Indicateur:N", title="Indicateur"),
+            y=alt.Y("Écart (%):Q", scale=alt.Scale(domain=[-100, 100])),
+            color=alt.condition("datum['Écart (%)'] > 0", alt.value("green"), alt.value("red")),
+            tooltip=["Indicateur", "Écart (%)"]
+        ).properties(width=900, height=300, title=f"Écarts moyens - {titre}")
+        st.altair_chart(chart, use_container_width=True)
 
-    ligne = alt.Chart(long_df).mark_line(point=True).encode(
-        x="Semaine:N",
-        y=alt.Y("Écart (%):Q", scale=alt.Scale(domain=[-100, 100])),
-        color="Indicateur",
-        tooltip=["Semaine", "Indicateur", "Écart (%)"]
-    ).properties(width=900, height=400, title=titre)
+    else:
+        ligne = alt.Chart(long_df).mark_line(point=True).encode(
+            x="Semaine:N",
+            y=alt.Y("Écart (%):Q", scale=alt.Scale(domain=[-100, 100])),
+            color="Indicateur",
+            tooltip=["Semaine", "Indicateur", "Écart (%)"]
+        ).properties(width=900, height=400, title=f"Tendance hebdomadaire - {titre}")
 
-    st.altair_chart(barre & ligne, use_container_width=True)
+        st.altair_chart(ligne, use_container_width=True)
 
+# === Affichage des sections ===
 st.subheader("📌 Indicateurs Opérationnels : OK / NOK / Reportés")
 action_cols = ["Ok", "Nok", "Reportés"]
-afficher_graphique(ecarts_avr, action_cols, "Tendance hebdomadaire des indicateurs opérationnels")
+afficher_graphique(ecarts_avr, action_cols, "Indicateurs Opérationnels")
 
 st.subheader("📌 Indicateurs Financiers : Montants")
 montant_cols = ["Montant prévu", "Montant réel", "Montant echec"]
-afficher_graphique(ecarts_avr, montant_cols, "Tendance hebdomadaire des montants")
+afficher_graphique(ecarts_avr, montant_cols, "Montants")
 
 st.subheader("📌 Indicateurs de Performance : Taux")
 taux_cols = ["Taux Réussite", "Taux Echec", "Taux Report", "Taux Cloture"]
-afficher_graphique(ecarts_avr, taux_cols, "Tendance hebdomadaire des taux de performance")
+afficher_graphique(ecarts_avr, taux_cols, "Taux de Performance")
 
 # === Export ===
 buffer = BytesIO()
