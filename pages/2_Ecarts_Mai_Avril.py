@@ -31,9 +31,9 @@ mai = df_mai[["Semaine"] + cols_to_compare].set_index("Semaine")
 avril = df_avril[["Semaine"] + cols_to_compare].set_index("Semaine")
 avril = avril.loc[mai.index]  # Réalignement
 
-# Calcul des écarts en pourcentage
+# Calcul des écarts en pourcentage avec traitement des 0 et limite [-100%, +100%]
 ecarts = ((mai - avril) / avril.replace(0, pd.NA)) * 100
-ecarts = ecarts.round(2)
+ecarts = ecarts.clip(lower=-100, upper=100).round(2)
 ecarts.loc["MOYENNE"] = ecarts.mean()
 
 # === Affichage tableau interactif ===
@@ -44,20 +44,36 @@ gb.configure_pagination()
 grid_options = gb.build()
 AgGrid(ecarts.reset_index(), gridOptions=grid_options, height=450, fit_columns_on_grid_load=True)
 
-# === Graphique d'évolution des écarts ===
-st.subheader("📈 Graphique d'évolution des écarts par indicateur")
+# === Choix du graphique ===
+st.subheader("📈 Graphiques dynamiques des écarts")
+mode = st.radio("Choisir l'analyse graphique", ["Écarts par indicateur (hebdo)", "Écarts par semaine (indicateurs cumulés)"])
 
-# Préparation des données pour Altair
-long_df = ecarts.drop(index="MOYENNE").reset_index().melt(id_vars="Semaine", var_name="Indicateur", value_name="Écart (%)")
+# Préparation des données
+if mode == "Écarts par indicateur (hebdo)":
+    long_df = ecarts.drop(index="MOYENNE").reset_index().melt(id_vars="Semaine", var_name="Indicateur", value_name="Écart (%)")
+    chart = alt.Chart(long_df).mark_line(point=True).encode(
+        x=alt.X("Semaine:N", title="Semaine"),
+        y=alt.Y("Écart (%):Q", scale=alt.Scale(domain=[-100, 100])),
+        color="Indicateur:N",
+        tooltip=["Semaine", "Indicateur", "Écart (%)"]
+    ).properties(width=900, height=450)
+    st.altair_chart(chart, use_container_width=True)
 
-chart = alt.Chart(long_df).mark_line(point=True).encode(
-    x=alt.X("Semaine:N", title="Semaine"),
-    y=alt.Y("Écart (%):Q", title="Écart en %"),
-    color="Indicateur:N",
-    tooltip=["Semaine", "Indicateur", "Écart (%)"]
-).properties(width=900, height=500)
+elif mode == "Écarts par semaine (indicateurs cumulés)":
+    df_sum_mai = mai.sum().to_frame(name="Mai")
+    df_sum_avril = avril.sum().to_frame(name="Avril")
+    df_total = df_sum_mai.join(df_sum_avril)
+    df_total["Écart (%)"] = ((df_total["Mai"] - df_total["Avril"]) / df_total["Avril"].replace(0, pd.NA)) * 100
+    df_total["Écart (%)"] = df_total["Écart (%)"].clip(-100, 100).round(2)
+    df_total = df_total.reset_index().rename(columns={"index": "Indicateur"})
 
-st.altair_chart(chart, use_container_width=True)
+    bar_chart = alt.Chart(df_total).mark_bar().encode(
+        x=alt.X("Indicateur:N", sort='-y'),
+        y=alt.Y("Écart (%):Q", scale=alt.Scale(domain=[-100, 100])),
+        color=alt.condition("datum['Écart (%)'] > 0", alt.value("green"), alt.value("red")),
+        tooltip=["Indicateur", "Écart (%)"]
+    ).properties(width=900, height=450)
+    st.altair_chart(bar_chart, use_container_width=True)
 
 # === Export CSV ===
 st.download_button(
