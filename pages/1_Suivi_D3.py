@@ -60,7 +60,7 @@ st.subheader("Suivi JOURNALIER CANAL D3")
 colonnes_affichees = ["Date", "NOM", "État", "OT planifiés", "OT Réalisé", "OT OK", "OT NOK", "OT Reportes"]
 df_affiche = df_filtered[colonnes_affichees]
 
-with st.expander("📋 Afficher le tableau des interventions"):
+with st.expander("Afficher le tableau des interventions"):
     st.dataframe(df_affiche, use_container_width=True)
 
 # === EXPORT EXCEL ===
