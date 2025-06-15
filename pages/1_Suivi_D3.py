@@ -99,7 +99,7 @@ fichier_excel = convertir_excel(df_affiche)
 nom_fichier = "Interventions_Tous.xlsx" if technicien_choisi == "Tous" else f"Interventions_{technicien_choisi.replace(' ', '_')}.xlsx"
 
 st.download_button(
-    label="📥 Télécharger tableau Excel",
+    label="Télécharger Excel",
     data=fichier_excel,
     file_name=nom_fichier,
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
