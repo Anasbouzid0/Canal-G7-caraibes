@@ -119,4 +119,4 @@ afficher_graphique(ecarts_avr, taux_cols, "Taux de Performance (Mai/Avril)")
 buffer = BytesIO()
 with pd.ExcelWriter(buffer, engine="xlsxwriter") as writer:
     ecarts_avr.to_excel(writer, sheet_name="Écarts Mai-Avril")
-st.download_button("Télécharger les Données (Excel)", buffer.getvalue(), file_name="ecarts_mai_avril.xlsx")
+st.download_button("Télécharger Excel", buffer.getvalue(), file_name="ecarts_mai_avril.xlsx")
