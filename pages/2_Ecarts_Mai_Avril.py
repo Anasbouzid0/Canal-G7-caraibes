@@ -2,7 +2,6 @@
 import streamlit as st
 import pandas as pd
 import altair as alt
-from st_aggrid import AgGrid, GridOptionsBuilder
 from io import BytesIO
 
 st.set_page_config(page_title="Suivi des Écarts de Performance", layout="centered")
@@ -67,17 +66,10 @@ with st.container():
     with col2:
         st.metric(label="Moyenne Générale des Écarts Mai/Avril", value=f"{moyenne_generale}%")
 
-# === Affichage Tableau ===
+# === Affichage Tableau (remplacé AgGrid par dataframe pour compatibilité mobile) ===
 st.markdown("### Synthèse des Écarts - Mois de Mai comparé à Avril")
-gb1 = GridOptionsBuilder.from_dataframe(ecarts_avr.reset_index())
-gb1.configure_default_column(resizable=True, filter=True, sortable=True)
-gb1.configure_pagination()
-AgGrid(
-    ecarts_avr.reset_index(),
-    gridOptions=gb1.build(),
-    height=240,
-    fit_columns_on_grid_load=True
-)
+with st.expander("Afficher le tableau des écarts"):
+    st.dataframe(ecarts_avr.reset_index(), use_container_width=True)
 
 # === Graphiques dynamiques avec barres d'évolution ===
 def afficher_graphique(df, indicateurs, titre):
